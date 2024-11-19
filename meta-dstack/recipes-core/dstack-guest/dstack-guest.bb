@@ -5,11 +5,9 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 
 inherit systemd update-rc.d
 
-REPO_ROOT = "${THISDIR}/../../.."
-
-SRC_URI = "file://${REPO_ROOT}/dstack"
-
-S = "${WORKDIR}/${REPO_ROOT}/dstack"
+SRC_URI = "git://github.com/Dstack-TEE/dstack.git;protocol=https;branch=master"
+SRCREV = "06ab627e81b8a8930e4bc506e89b79e70a69a1b8"
+S = "${WORKDIR}/git"
 
 SYSTEMD_PACKAGES = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${PN}','',d)}"
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('DISTRO_FEATURES','systemd','tappd.service tboot.service app-compose.service','',d)}"
