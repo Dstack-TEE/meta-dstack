@@ -2,7 +2,8 @@
 set -e
 
 usage() {
-    printf "Usage: $0 [--no-check|-n]"
+    echo "Usage: $0 [-n]"
+    echo "  -n: Don't check reproducibility"
 }
 
 NO_CHECK=0
@@ -35,7 +36,7 @@ GUEST_SRC_DIR=/meta-dstack
 cd $THIS_DIR
 
 mkdir -p .dummy
-(cd .dummy && docker build -t $BUILDER_NAME -f ../Dockerfile.repro .)
+(cd .dummy && docker build --platform linux/amd64 -t $BUILDER_NAME -f ../Dockerfile.repro .)
 rm -rf .dummy
 
 build_to() {
@@ -67,5 +68,5 @@ echo "git clone https://github.com/Dstack-TEE/meta-dstack.git"
 echo "cd meta-dstack/"
 echo "git checkout $(git -C $GIT_DIR rev-parse HEAD)"
 echo "git submodule update --init --recursive"
-echo "cd repro-build && ./repro-build.sh --no-check"
+echo "cd repro-build && ./repro-build.sh -n"
 echo '```'
