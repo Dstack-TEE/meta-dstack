@@ -63,8 +63,9 @@ fi
 
 echo "## Reproducible build command:"
 echo '```bash'
-echo "git clone https://github.com/Dstack-TEE/meta-dstack.git --recursive"
+echo "git clone https://github.com/Dstack-TEE/meta-dstack.git"
 echo "cd meta-dstack/repro-build"
 echo "git checkout $(git -C $GIT_DIR rev-parse HEAD)"
+echo "git submodule update --init --recursive"
 echo "./repro-build.sh --no-check"
 echo '```'
