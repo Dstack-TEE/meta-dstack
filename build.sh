@@ -104,7 +104,7 @@ build_guest() {
     if [ -z "$BBPATH" ]; then
         source $SCRIPT_DIR/dev-setup $1
     fi
-    make -C $META_DIR dist DIST_DIR=$IMAGES_DIR
+    make -C $META_DIR dist DIST_DIR=$IMAGES_DIR BB_BUILD_DIR=${BBPATH}
 }
 
 # Step 3: make certs

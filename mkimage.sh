@@ -29,15 +29,15 @@ else
     ENCFS=1
 fi
 
-BUILD_DIR=${BUILD_DIR:-build}
-DIST_DIR=${DIST_DIR:-${BUILD_DIR}/dist}
+BB_BUILD_DIR=$(realpath ${BB_BUILD_DIR:-build})
+DIST_DIR=$(realpath ${DIST_DIR:-${BB_BUILD_DIR}/dist})
 
 ROOTFS_IMAGE_NAME=${DIST_NAME}-rootfs
-WORK_DIR=${BUILD_DIR}/${ROOTFS_IMAGE_NAME}.tmp
-INITRAMFS_IMAGE=${BUILD_DIR}/tmp/deploy/images/tdx/dstack-initramfs.cpio.gz
-ROOTFS_IMAGE=${BUILD_DIR}/tmp/deploy/images/tdx/${ROOTFS_IMAGE_NAME}-tdx.cpio
-KERNEL_IMAGE=${BUILD_DIR}/tmp/deploy/images/tdx/bzImage
-OVMF_FIRMWARE=${BUILD_DIR}/tmp/deploy/images/tdx/ovmf.fd
+WORK_DIR=${BB_BUILD_DIR}/${ROOTFS_IMAGE_NAME}.tmp
+INITRAMFS_IMAGE=${BB_BUILD_DIR}/tmp/deploy/images/tdx/dstack-initramfs.cpio.gz
+ROOTFS_IMAGE=${BB_BUILD_DIR}/tmp/deploy/images/tdx/${ROOTFS_IMAGE_NAME}-tdx.cpio
+KERNEL_IMAGE=${BB_BUILD_DIR}/tmp/deploy/images/tdx/bzImage
+OVMF_FIRMWARE=${BB_BUILD_DIR}/tmp/deploy/images/tdx/ovmf.fd
 ROOTFS_HASH=$(sha256sum "$ROOTFS_IMAGE" | awk '{print $1}')
 DSTACK_VERSION=$(bitbake-getvar --value DISTRO_VERSION)
 OUTPUT_DIR=${OUTPUT_DIR:-"${DIST_DIR}/${DIST_NAME}-${DSTACK_VERSION}"}
