@@ -51,7 +51,10 @@ build_to() {
 }
 
 build_to $HOST_BUILD_DIR_A DSTACK_TAR_RELEASE=1
-mv $HOST_BUILD_DIR_A/images/*.tar.gz .
+
+DIST_DIR=${THIS_DIR}/dist
+mkdir -p $DIST_DIR
+mv $HOST_BUILD_DIR_A/images/*.tar.gz $DIST_DIR/
 if [ $NO_CHECK -eq 0 ]; then
     build_to $HOST_BUILD_DIR_B
     ${THIS_DIR}/check.sh $HOST_BUILD_DIR_A $HOST_BUILD_DIR_B
@@ -62,11 +65,20 @@ if [[ -n $(git -C $GIT_DIR status --porcelain) ]]; then
     exit 0
 fi
 
-echo "## Reproducible build command:"
-echo '```bash'
-echo "git clone https://github.com/Dstack-TEE/meta-dstack.git"
-echo "cd meta-dstack/"
-echo "git checkout $(git -C $GIT_DIR rev-parse HEAD)"
-echo "git submodule update --init --recursive"
-echo "cd repro-build && ./repro-build.sh -n"
-echo '```'
+echo "Reproducible build commands:"
+echo "==========================="
+cat <<EOF | tee $DIST_DIR/reproduce.sh
+#!/bin/bash
+set -e
+
+git clone https://github.com/Dstack-TEE/meta-dstack.git
+cd meta-dstack/
+git checkout $(git -C $THIS_DIR rev-parse HEAD)
+git submodule update --init --recursive
+cd repro-build && ./repro-build.sh -n
+EOF
+echo "==========================="
+
+chmod +x $DIST_DIR/reproduce.sh
+
+echo "Release tar files are in $THIS_DIR/dist/"
