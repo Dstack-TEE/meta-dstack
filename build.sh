@@ -7,6 +7,7 @@ DSTACK_DIR=$SCRIPT_DIR/dstack
 CERTS_DIR=`pwd`/certs
 IMAGES_DIR=`pwd`/images
 RUN_DIR=`pwd`/run
+RUST_BUILD_DIR=`pwd`/rust-target
 CERBOT_WORKDIR=$RUN_DIR/certbot
 KMS_UPGRADE_REGISTRY_DIR=$RUN_DIR/kms/upgrade_registry
 KMS_CERT_LOG_DIR=$RUN_DIR/kms/cert_log/
@@ -48,6 +49,8 @@ TEEPOD_CID_POOL_START=10000
 TEEPOD_CID_POOL_SIZE=1000
 # Whether port mapping from host to CVM is allowed
 TEEPOD_PORT_MAPPING_ENABLED=false
+# Host API configuration, type of uint32
+TEEPOD_VSOCK_LISTEN_PORT=9080
 
 KMS_RPC_LISTEN_PORT=9043
 TPROXY_RPC_LISTEN_PORT=9010
@@ -93,8 +96,8 @@ EOF
 # Step 1: build binaries
 build_host() {
     echo "Building binaries"
-    (cd $DSTACK_DIR && cargo build --release)
-    cp $DSTACK_DIR/target/release/{tproxy,kms,teepod,certbot,ct_monitor,supervisor} .
+    (cd $DSTACK_DIR && cargo build --release --target-dir ${RUST_BUILD_DIR})
+    cp ${RUST_BUILD_DIR}/release/{tproxy,kms,teepod,certbot,ct_monitor,supervisor} .
 }
 
 # Step 2: build guest images
@@ -211,6 +214,9 @@ range = [
 base_domain = "$TPROXY_PUBLIC_DOMAIN"
 port = $TPROXY_SERVE_PORT
 tappd_port = $TAPPD_PORT
+
+[host_api]
+port = $TEEPOD_VSOCK_LISTEN_PORT
 EOF
 
     cat <<EOF > certbot.toml
