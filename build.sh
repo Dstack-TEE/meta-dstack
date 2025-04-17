@@ -108,7 +108,7 @@ EOF
 build_host() {
     echo "Building binaries"
     (cd $DSTACK_DIR && cargo build --release --target-dir ${RUST_BUILD_DIR})
-    cp ${RUST_BUILD_DIR}/release/{tproxy,kms,teepod,certbot,ct_monitor,supervisor} .
+    cp ${RUST_BUILD_DIR}/release/{dstack-gateway,dstack-kms,dstack-vmm,certbot,ct_monitor,supervisor} .
 }
 
 # Step 2: build guest images
