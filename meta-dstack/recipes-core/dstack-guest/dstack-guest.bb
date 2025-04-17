@@ -16,7 +16,7 @@ S = "${WORKDIR}/${SRC_DIR}"
 
 RDEPENDS:${PN} += "bash"
 
-DSTACK_SERVICES = "tappd.service tboot.service app-compose.service"
+DSTACK_SERVICES = "dstack-guest-agent.service tboot.service app-compose.service"
 SYSTEMD_PACKAGES = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${PN}','',d)}"
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${DSTACK_SERVICES}','',d)}"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
@@ -43,7 +43,7 @@ do_install() {
     install -d ${D}${sysconfdir}/systemd/journald.conf.d
     install -m 0755 ${CARGO_BINDIR}/iohash ${D}${bindir}
     install -m 0755 ${CARGO_BINDIR}/tdxctl ${D}${bindir}
-    install -m 0755 ${CARGO_BINDIR}/tappd ${D}${bindir}
+    install -m 0755 ${CARGO_BINDIR}/dstack-guest-agent ${D}${bindir}
     install -m 0755 ${S}/basefiles/tboot.sh ${D}${bindir}
     install -m 0755 ${S}/basefiles/app-compose.sh ${D}${bindir}
     install -m 0755 ${WORKDIR}/docker-daemon.json ${D}${sysconfdir}/docker/daemon.json
@@ -56,13 +56,13 @@ do_install() {
         install -d ${D}${systemd_system_unitdir} \
                    ${D}${sysconfdir}/systemd/resolved.conf.d
 
-        install -m 0644 ${S}/basefiles/tappd.service ${D}${systemd_system_unitdir}
+        install -m 0644 ${S}/basefiles/dstack-guest-agent.service ${D}${systemd_system_unitdir}
         install -m 0644 ${S}/basefiles/tboot.service ${D}${systemd_system_unitdir}
         install -m 0644 ${S}/basefiles/app-compose.service ${D}${systemd_system_unitdir}
         install -m 0644 ${S}/basefiles/llmnr.conf ${D}${sysconfdir}/systemd/resolved.conf.d
     else
         install -d ${D}${sysconfdir}/init.d
-        install -m 0755 ${S}/basefiles/tappd.init ${D}${sysconfdir}/init.d/tappd.init
+        install -m 0755 ${S}/basefiles/dstack-guest-agent.init ${D}${sysconfdir}/init.d/dstack-guest-agent.init
         bberror "init scripts for sysvinit is not implemented yet"
     fi
 }
