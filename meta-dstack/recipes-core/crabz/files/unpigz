@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+# unpigz wrapper script for crabz
+# This script mimics unpigz behavior using crabz for parallel decompression
+
+# Initialize variables
+KEEP_ORIGINAL=false
+OUTPUT_FILE=""
+FORCE=false
+TEST=false
+LIST=false
+DECOMPRESS=true
+STDOUT=false
+VERBOSE=false
+QUIET=false
+INPUT_FILES=()
+
+# Parse command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -c | --stdout)
+        STDOUT=true
+        shift
+        ;;
+    -d | --decompress)
+        DECOMPRESS=true
+        shift
+        ;;
+    -k | --keep)
+        KEEP_ORIGINAL=true
+        shift
+        ;;
+    -f | --force)
+        FORCE=true
+        shift
+        ;;
+    -t | --test)
+        TEST=true
+        shift
+        ;;
+    -l | --list)
+        LIST=true
+        shift
+        ;;
+    -v | --verbose)
+        VERBOSE=true
+        shift
+        ;;
+    -q | --quiet)
+        QUIET=true
+        shift
+        ;;
+    -h | --help)
+        cat <<EOF
+unpigz wrapper for crabz - decompress gzip files in parallel
+
+Usage: unpigz [options] [file ...]
+
+Options:
+  -c, --stdout      Write output to stdout
+  -d, --decompress  Decompress (default)
+  -k, --keep        Keep original file
+  -f, --force       Force overwrite of output file
+  -t, --test        Test compressed file integrity
+  -l, --list        List compressed file contents
+  -v, --verbose     Verbose mode
+  -q, --quiet       Quiet mode
+  -h, --help        Display this help message
+
+This is a wrapper that uses crabz for parallel decompression.
+EOF
+        exit 0
+        ;;
+    -*)
+        echo "Warning: Unrecognized option $1, ignoring" >&2
+        shift
+        ;;
+    *)
+        INPUT_FILES+=("$1")
+        shift
+        ;;
+    esac
+done
+
+# Build crabz command options
+CRABZ_OPTS="-d"  # Always decompress
+[ "$QUIET" = "true" ] && CRABZ_OPTS="$CRABZ_OPTS -Q"
+
+# If no input files specified, use stdin
+if [ ${#INPUT_FILES[@]} -eq 0 ]; then
+    if [ "$STDOUT" = "false" ]; then
+        STDOUT=true
+    fi
+    # Read from stdin and output to stdout
+    crabz $CRABZ_OPTS -o "-" "-"
+    exit $?
+fi
+
+# Process each input file
+for INPUT_FILE in "${INPUT_FILES[@]}"; do
+    # Check if input file exists
+    if [ ! -f "$INPUT_FILE" ] && [ ! -p "$INPUT_FILE" ]; then
+        echo "unpigz: $INPUT_FILE: No such file or directory" >&2
+        continue
+    fi
+
+    # Handle test mode
+    if [ "$TEST" = "true" ]; then
+        if [ "$QUIET" = "false" ]; then
+            echo "Testing $INPUT_FILE..." >&2
+        fi
+        crabz $CRABZ_OPTS -o "/dev/null" "$INPUT_FILE" >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            [ "$VERBOSE" = "true" ] && echo "$INPUT_FILE: OK" >&2
+        else
+            echo "$INPUT_FILE: ERROR" >&2
+            exit 1
+        fi
+        continue
+    fi
+
+    # Handle list mode
+    if [ "$LIST" = "true" ]; then
+        # crabz doesn't have a list mode, so we just show basic info
+        if [ -f "$INPUT_FILE" ]; then
+            SIZE=$(stat -c%s "$INPUT_FILE" 2>/dev/null || stat -f%z "$INPUT_FILE" 2>/dev/null)
+            echo "$INPUT_FILE: compressed size: $SIZE bytes"
+        fi
+        continue
+    fi
+
+    # Determine output file
+    if [ "$STDOUT" = "true" ]; then
+        # Output to stdout
+        crabz $CRABZ_OPTS -o "-" "$INPUT_FILE"
+    else
+        # Determine output filename
+        case "$INPUT_FILE" in
+        *.gz)
+            OUTPUT_FILE="${INPUT_FILE%.gz}"
+            ;;
+        *.tgz)
+            OUTPUT_FILE="${INPUT_FILE%.tgz}.tar"
+            ;;
+        *.z)
+            OUTPUT_FILE="${INPUT_FILE%.z}"
+            ;;
+        *)
+            OUTPUT_FILE="${INPUT_FILE}.out"
+            ;;
+        esac
+
+        # Check if output file exists and handle force flag
+        if [ -f "$OUTPUT_FILE" ] && [ "$FORCE" = "false" ]; then
+            echo "unpigz: $OUTPUT_FILE already exists; not overwritten" >&2
+            continue
+        fi
+
+        # Decompress to output file
+        if [ "$VERBOSE" = "true" ]; then
+            echo "Decompressing $INPUT_FILE to $OUTPUT_FILE..." >&2
+        fi
+
+        crabz $CRABZ_OPTS -o "$OUTPUT_FILE" "$INPUT_FILE"
+        RESULT=$?
+
+        if [ $RESULT -eq 0 ]; then
+            # Preserve timestamps if possible
+            if [ -f "$INPUT_FILE" ]; then
+                touch -r "$INPUT_FILE" "$OUTPUT_FILE" 2>/dev/null
+            fi
+
+            # Remove original file unless -k flag is set
+            if [ "$KEEP_ORIGINAL" = "false" ] && [ -f "$INPUT_FILE" ]; then
+                rm -f "$INPUT_FILE"
+            fi
+        else
+            # On error, remove partial output file
+            rm -f "$OUTPUT_FILE"
+            echo "unpigz: Error decompressing $INPUT_FILE" >&2
+            exit 1
+        fi
+    fi
+done
+
+exit 0
