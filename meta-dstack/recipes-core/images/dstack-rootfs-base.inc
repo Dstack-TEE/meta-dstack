@@ -25,6 +25,7 @@ IMAGE_INSTALL = "\
     kernel-module-fuse \
     fuse3 \
     fuse3-utils \
+    crabz \
 "
 
 IMAGE_NAME_SUFFIX ?= ""
