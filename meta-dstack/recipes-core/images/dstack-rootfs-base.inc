@@ -142,11 +142,4 @@ mkdirs() {
     mkdir -p ${IMAGE_ROOTFS}/etc/wireguard
     mkdir -p ${IMAGE_ROOTFS}/var/lib/docker
     ln -sf dstack ${IMAGE_ROOTFS}/tapp
-
-    # Aliases passwd files to a subdirectory
-    mkdir -p ${IMAGE_ROOTFS}/etc/users
-    mv ${IMAGE_ROOTFS}/etc/passwd ${IMAGE_ROOTFS}/etc/users/
-    mv ${IMAGE_ROOTFS}/etc/shadow ${IMAGE_ROOTFS}/etc/users/
-    ln -s users/passwd ${IMAGE_ROOTFS}/etc/passwd
-    ln -s users/shadow ${IMAGE_ROOTFS}/etc/shadow
 }
