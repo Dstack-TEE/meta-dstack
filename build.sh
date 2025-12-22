@@ -113,7 +113,10 @@ EOF
 build_host() {
     echo "Building binaries"
     (cd $DSTACK_DIR && cargo build --release --target-dir ${RUST_BUILD_DIR})
-    cp ${RUST_BUILD_DIR}/release/{dstack-gateway,dstack-kms,dstack-vmm,supervisor} .
+    for bin in dstack-gateway dstack-kms dstack-vmm supervisor; do
+        cp "${RUST_BUILD_DIR}/release/${bin}" ".${bin}.new"
+        mv -f ".${bin}.new" "./${bin}"
+    done
 }
 
 # Step 2: build guest images
