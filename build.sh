@@ -85,7 +85,6 @@ GATEWAY_PUBLIC_DOMAIN=<your domain for zt-https>
 # for certbot
 CERTBOT_ENABLED=false
 CF_API_TOKEN=
-CF_ZONE_ID=
 ACME_URL=https://acme-staging-v02.api.letsencrypt.org/directory
 EOF
     if [ -f $CONFIG_FILE ]; then
@@ -113,7 +112,10 @@ EOF
 build_host() {
     echo "Building binaries"
     (cd $DSTACK_DIR && cargo build --release --target-dir ${RUST_BUILD_DIR})
-    cp ${RUST_BUILD_DIR}/release/{dstack-gateway,dstack-kms,dstack-vmm,supervisor} .
+    for bin in dstack-gateway dstack-kms dstack-vmm supervisor; do
+        cp "${RUST_BUILD_DIR}/release/${bin}" ".${bin}.new"
+        mv -f ".${bin}.new" "./${bin}"
+    done
 }
 
 # Step 2: build guest images
@@ -221,8 +223,6 @@ workdir = "$CERBOT_WORKDIR"
 acme_url = "$ACME_URL"
 # Cloudflare API token
 cf_api_token = "$CF_API_TOKEN"
-# Cloudflare zone ID
-cf_zone_id = "$CF_ZONE_ID"
 # Auto set CAA record
 auto_set_caa = true
 # Domain to issue certificates for
