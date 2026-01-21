@@ -32,6 +32,7 @@ IMAGE_INSTALL = "\
     xfsprogs \
     e2fsprogs \
     e2fsprogs-resize2fs \
+    gptfdisk \
 "
 
 IMAGE_NAME_SUFFIX ?= ""
