@@ -29,12 +29,7 @@ inherit cargo_bin
 do_unpack() {
     mkdir -p ${S}
     rsync -a --exclude="target" ${SRC_DIR}/ ${S}/
-
-    if ${@bb.utils.contains('IMAGE_INSTALL', 'nvidia-container-toolkit', 'true', 'false', d)}; then
-        cp ${THISDIR}/files/docker-daemon-nvidia.json ${S}/docker-daemon.json
-    else
-        cp ${THISDIR}/files/docker-daemon.json ${S}/docker-daemon.json
-    fi
+    cp ${THISDIR}/files/docker-daemon.json ${S}/docker-daemon.json
 }
 
 # Force the configure task to run every time to detect source changes
