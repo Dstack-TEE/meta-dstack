@@ -14,3 +14,9 @@ do_install:append() {
 SYSTEMD_SERVICE:${PN}-vconsole-setup = ""
 
 FILES:${PN} += "${sysconfdir}/modprobe.d/blacklist-autofs4.conf"
+
+# Create a minimal package with only systemd-socket-proxyd
+# This avoids pulling in all of systemd-extra-utils
+PACKAGES =+ "${PN}-socket-proxyd"
+FILES:${PN}-socket-proxyd = "${nonarch_libdir}/systemd/systemd-socket-proxyd"
+RDEPENDS:${PN}-socket-proxyd = "${PN}"

@@ -11,14 +11,14 @@ SRC_DIR = '${REPO_ROOT}/dstack'
 
 S = "${WORKDIR}/dstack"
 
-RDEPENDS:${PN} += "bash"
+RDEPENDS:${PN} += "bash systemd-socket-proxyd"
 
 DEPENDS += "rsync-native"
 
 # Ensure rsync-native is built before unpack runs
 do_unpack[depends] += "rsync-native:do_populate_sysroot"
 
-DSTACK_SERVICES = "dstack-guest-agent.service dstack-prepare.service app-compose.service wg-checker.service"
+DSTACK_SERVICES = "dstack-guest-agent.service dstack-prepare.service app-compose.service wg-checker.service dstack-socket.socket dstack-socket.service tappd-socket.socket tappd-socket.service"
 SYSTEMD_PACKAGES = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${PN}','',d)}"
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${DSTACK_SERVICES}','',d)}"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
@@ -76,6 +76,10 @@ do_install() {
         install -m 0644 ${S}/basefiles/dstack-prepare.service ${D}${systemd_system_unitdir}
         install -m 0644 ${S}/basefiles/app-compose.service ${D}${systemd_system_unitdir}
         install -m 0644 ${S}/basefiles/wg-checker.service ${D}${systemd_system_unitdir}
+        install -m 0644 ${S}/basefiles/dstack-socket.socket ${D}${systemd_system_unitdir}
+        install -m 0644 ${S}/basefiles/dstack-socket.service ${D}${systemd_system_unitdir}
+        install -m 0644 ${S}/basefiles/tappd-socket.socket ${D}${systemd_system_unitdir}
+        install -m 0644 ${S}/basefiles/tappd-socket.service ${D}${systemd_system_unitdir}
         install -m 0644 ${S}/basefiles/llmnr.conf ${D}${sysconfdir}/systemd/resolved.conf.d
         install -d ${D}${sysconfdir}/systemd/system/docker.service.d
         install -m 0644 ${S}/basefiles/docker.service.d/dstack-guest-agent.conf ${D}${sysconfdir}/systemd/system/docker.service.d/
