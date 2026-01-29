@@ -64,6 +64,7 @@ ROOTFS_POSTPROCESS_COMMAND += "remove_sysvinit_files;"
 ROOTFS_POSTPROCESS_COMMAND += "symlink_lib64;"
 IMAGE_FEATURES[validitems] += "nologin"
 ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'nologin' ], "disable_login", "",d)}'
+ROOTFS_POSTPROCESS_COMMAND += "install_docker_config;"
 ROOTFS_POSTPROCESS_COMMAND += "mkdirs;"
 
 
@@ -131,6 +132,13 @@ disable_login() {
     rm -rf ${IMAGE_ROOTFS}/usr/share/factory
 
     > ${IMAGE_ROOTFS}/etc/securetty
+}
+
+DOCKER_DAEMON_JSON ?= "${THISDIR}/files/docker-daemon.json"
+
+install_docker_config() {
+    install -d ${IMAGE_ROOTFS}${sysconfdir}/docker
+    install -m 0644 ${DOCKER_DAEMON_JSON} ${IMAGE_ROOTFS}${sysconfdir}/docker/daemon.json
 }
 
 mkdirs() {
