@@ -29,12 +29,6 @@ inherit cargo_bin
 do_unpack() {
     mkdir -p ${S}
     rsync -a --exclude="target" ${SRC_DIR}/ ${S}/
-
-    if ${@bb.utils.contains('IMAGE_INSTALL', 'nvidia-container-toolkit', 'true', 'false', d)}; then
-        cp ${THISDIR}/files/docker-daemon-nvidia.json ${S}/docker-daemon.json
-    else
-        cp ${THISDIR}/files/docker-daemon.json ${S}/docker-daemon.json
-    fi
 }
 
 # Force the configure task to run every time to detect source changes
@@ -55,14 +49,12 @@ do_compile[network] = "1"
 
 do_install() {
     install -d ${D}${bindir}
-    install -d ${D}${sysconfdir}/docker
     install -d ${D}${sysconfdir}/systemd/journald.conf.d
     install -m 0755 ${CARGO_BINDIR}/dstack-util ${D}${bindir}
     install -m 0755 ${CARGO_BINDIR}/dstack-guest-agent ${D}${bindir}
     install -m 0755 ${S}/basefiles/dstack-prepare.sh ${D}${bindir}
     install -m 0755 ${S}/basefiles/wg-checker.sh ${D}${bindir}
     install -m 0755 ${S}/basefiles/app-compose.sh ${D}${bindir}
-    install -m 0755 ${S}/docker-daemon.json ${D}${sysconfdir}/docker/daemon.json
     install -m 0644 ${S}/basefiles/journald.conf ${D}${sysconfdir}/systemd/journald.conf.d/dstack.conf
 
     install -d ${D}${sysconfdir}/

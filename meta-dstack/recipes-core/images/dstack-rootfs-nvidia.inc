@@ -10,3 +10,5 @@ NVIDIA_GROUP = "acpid \
 "
 KERNEL_MODULE_AUTOLOAD:append = " nvidia nvidia-drm nvidia-modeset nvidia-uvm video"
 IMAGE_INSTALL:append = " ${NVIDIA_GROUP}"
+
+DOCKER_DAEMON_JSON = "${THISDIR}/files/docker-daemon-nvidia.json"
