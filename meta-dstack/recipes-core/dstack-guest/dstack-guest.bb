@@ -60,6 +60,9 @@ do_install() {
     install -d ${D}${sysconfdir}/
     install -m 0644 ${S}/basefiles/tdx-attest.conf ${D}${sysconfdir}/tdx-attest.conf
 
+    install -d ${D}${sysconfdir}/sysctl.d
+    install -m 0644 ${S}/basefiles/sysctl.d/99-dstack.conf ${D}${sysconfdir}/sysctl.d/99-dstack.conf
+
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -d ${D}${systemd_system_unitdir} \
                    ${D}${sysconfdir}/systemd/resolved.conf.d
