@@ -8,6 +8,9 @@
       "nvidia": {
           "args": [],
           "path": "nvidia-container-runtime"
+      },
+      "sysbox-runc": {
+          "path": "/usr/bin/sysbox-runc"
       }
   }
 }
