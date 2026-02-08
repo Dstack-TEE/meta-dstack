@@ -5,7 +5,6 @@ After=dstack-prepare.service
 
 [Service]
 Type=notify
-ExecStartPre=/bin/sh -c "mkdir -p /var/volatile/dstack/persistent/sysbox /var/lib/sysbox && mount --bind /var/volatile/dstack/persistent/sysbox /var/lib/sysbox"
 ExecStart=/usr/bin/sysbox-mgr --data-root /var/lib/sysbox
 TimeoutStartSec=45
 TimeoutStopSec=90
