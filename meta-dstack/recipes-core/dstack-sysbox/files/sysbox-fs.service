@@ -5,7 +5,7 @@ After=sysbox-mgr.service
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/sysbox-fs --log /var/log/sysbox-fs.log
+ExecStart=/usr/bin/sysbox-fs
 TimeoutStartSec=10
 TimeoutStopSec=10
 StartLimitInterval=0
@@ -13,6 +13,8 @@ NotifyAccess=main
 OOMScoreAdjust=-500
 LimitNOFILE=infinity
 LimitNPROC=infinity
+StandardOutput=journal+console
+StandardError=journal+console
 
 [Install]
 WantedBy=sysbox.service

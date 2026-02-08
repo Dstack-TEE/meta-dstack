@@ -1,8 +1,9 @@
 [Unit]
 Description=Sysbox container runtime
 Documentation=https://github.com/nestybox/sysbox
+Wants=dstack-prepare.service
+After=dstack-prepare.service sysbox-mgr.service sysbox-fs.service
 BindsTo=sysbox-mgr.service sysbox-fs.service
-After=sysbox-mgr.service sysbox-fs.service
 Before=docker.service containerd.service
 
 [Service]

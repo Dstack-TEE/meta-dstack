@@ -42,7 +42,7 @@ S = "${WORKDIR}/sysbox"
 PV = "${SYSBOX_VERSION}+git${SRCPV}"
 
 DEPENDS += "libseccomp"
-RDEPENDS:${PN} += "libseccomp"
+RDEPENDS:${PN} += "libseccomp rsync fuse"
 
 inherit go goarch pkgconfig systemd
 
@@ -166,6 +166,15 @@ FILES:${PN} += " \
     ${sysconfdir}/modules-load.d/50-sysbox-mod.conf \
     /var/lib/sysbox \
 "
+
+# Pre-create subuid/subgid entries for sysbox user namespace mappings.
+# sysbox-mgr tries to write these at startup, but rootfs is read-only (dm-verity).
+# If the correct entry already exists, sysbox-mgr skips the write.
+# This runs at rootfs creation time (not first boot).
+pkg_postinst:${PN}() {
+    echo "sysbox:100000:65536" >> $D${sysconfdir}/subuid
+    echo "sysbox:100000:65536" >> $D${sysconfdir}/subgid
+}
 
 INSANE_SKIP:${PN} += "ldflags already-stripped"
 
