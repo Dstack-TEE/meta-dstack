@@ -6,6 +6,8 @@ SRC_URI += "file://dstack-docker.cfg \
             file://dstack-docker.scc \
             file://dstack-tdx.cfg \
             file://dstack-tdx.scc \
+            file://dstack-sysbox.cfg \
+            file://dstack-sysbox.scc \
             file://dstack.cfg \
             file://dstack.scc"
 
@@ -16,6 +18,7 @@ KERNEL_FEATURES:append = " features/cgroups/cgroups.scc \
                           features/xfs/xfs.scc \
                           cfg/fs/squashfs.scc \
                           dstack-docker.scc \
+                          dstack-sysbox.scc \
                           dstack.scc"
 
 KERNEL_FEATURES:append = " ${@bb.utils.contains("DISTRO_FEATURES", "dm-verity", " features/device-mapper/dm-verity.scc", "" ,d)}"
