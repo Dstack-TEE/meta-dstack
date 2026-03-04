@@ -9,7 +9,8 @@ SRC_URI += "file://dstack-docker.cfg \
             file://dstack-sysbox.cfg \
             file://dstack-sysbox.scc \
             file://dstack.cfg \
-            file://dstack.scc"
+            file://dstack.scc \
+            file://0002-overlayfs-enable-idmapped-mounts.patch"
 
 KERNEL_FEATURES:append = " features/cgroups/cgroups.scc \
                           features/overlayfs/overlayfs.scc \
