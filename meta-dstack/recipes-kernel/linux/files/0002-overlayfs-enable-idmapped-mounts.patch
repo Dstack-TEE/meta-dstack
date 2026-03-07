@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kevin Wang <kvin@phala.network>
+Date: Tue, 4 Mar 2026 00:00:00 +0000
+Subject: [PATCH] overlayfs: add FS_ALLOW_IDMAP to enable idmapped mounts
+
+Overlayfs already has comprehensive support for idmapped mounts through
+its handling of idmapped layers (since 5.19), but it is missing the
+FS_ALLOW_IDMAP flag on ovl_fs_type.  Without this flag the VFS rejects
+mount_setattr(MOUNT_ATTR_IDMAP) on overlay mounts with -EINVAL, which
+prevents container runtimes such as Sysbox from applying transparent UID
+shifting to the container rootfs overlay.
+
+Add FS_ALLOW_IDMAP so that the idmap machinery is available on the
+overlay mount itself, not only on its component layers.
+
+Upstream-Status: Submitted [https://lkml.org/lkml/2025/8/15/1218]
+Signed-off-by: Kevin Wang <kvin@phala.network>
+---
+ fs/overlayfs/super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/overlayfs/super.c b/fs/overlayfs/super.c
+index 1a530c5a4e02..b7d8e5c91234 100644
+--- a/fs/overlayfs/super.c
++++ b/fs/overlayfs/super.c
+@@ -1484,7 +1484,7 @@ struct file_system_type ovl_fs_type = {
+ 	.name			= "overlay",
+ 	.init_fs_context	= ovl_init_fs_context,
+ 	.parameters		= ovl_parameter_spec,
+-	.fs_flags		= FS_USERNS_MOUNT,
++	.fs_flags		= FS_USERNS_MOUNT | FS_ALLOW_IDMAP,
+ 	.kill_sb		= kill_anon_super,
+ };
+ MODULE_ALIAS_FS("overlay");
+--
+2.46.0
