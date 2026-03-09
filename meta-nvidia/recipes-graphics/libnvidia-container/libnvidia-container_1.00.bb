@@ -39,7 +39,8 @@ do_compile() {
     export SOURCE_DATE_EPOCH="${@d.getVar('SOURCE_DATE_EPOCH') or '0'}"
     export CGO_LDFLAGS="${CGO_LDFLAGS} -Wl,--build-id=none"
 
-    export CURL="curl --insecure"
+    # Point curl to the correct CA certificates in the native sysroot
+    export CURL_CA_BUNDLE="${RECIPE_SYSROOT_NATIVE}/etc/ssl/certs/ca-certificates.crt"
 
     oe_runmake
 }
