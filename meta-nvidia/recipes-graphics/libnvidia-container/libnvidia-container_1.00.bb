@@ -16,7 +16,7 @@ CFLAGS:prepend = " -I${RECIPE_SYSROOT_NATIVE}/usr/include/tirpc "
 
 export OBJCPY="${OBJCOPY}"
 GO_IMPORT = "github.com/NVIDIA/nvidia-container-toolkit"
-SECURITY_LDFLAGS = ""
+# Keep lazy binding for Go/CGo compatibility while preserving other security hardening flags.
 LDFLAGS += "-Wl,-z,lazy"
 GO_LINKSHARED = ""
 REQUIRED_DISTRO_FEATURES = "virtualization"
