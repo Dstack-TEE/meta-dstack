@@ -5,7 +5,7 @@ After=dstack-prepare.service
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/sysbox-mgr --data-root /var/lib/sysbox
+ExecStart=/usr/bin/sysbox-mgr --data-root /var/lib/sysbox --disable-ovfs-on-idmapped-mount
 TimeoutStartSec=45
 TimeoutStopSec=90
 StartLimitInterval=0
