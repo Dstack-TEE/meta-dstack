@@ -27,6 +27,19 @@ IMAGE_INSTALL = "\
     kernel-module-br-netfilter \
     kernel-module-xt-mark \
     kernel-module-xt-connmark \
+    kernel-module-xt-comment \
+    kernel-module-nf-tables \
+    kernel-module-nft-compat \
+    kernel-module-nft-nat \
+    kernel-module-nft-chain-nat \
+    kernel-module-nft-masq \
+    kernel-module-nft-redir \
+    kernel-module-nft-ct \
+    kernel-module-nft-log \
+    kernel-module-nft-limit \
+    kernel-module-nft-reject \
+    kernel-module-nft-reject-inet \
+    kernel-module-nft-hash \
     fuse3 \
     fuse3-utils \
     pigz \
