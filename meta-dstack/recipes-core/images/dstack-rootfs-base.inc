@@ -28,6 +28,13 @@ IMAGE_INSTALL = "\
     kernel-module-xt-mark \
     kernel-module-xt-connmark \
     kernel-module-xt-comment \
+    kernel-module-xt-multiport \
+    kernel-module-xt-statistic \
+    kernel-module-xt-redirect \
+    kernel-module-xt-tcpmss \
+    kernel-module-xt-ct \
+    kernel-module-xt-log \
+    kernel-module-xt-limit \
     kernel-module-nf-tables \
     kernel-module-nft-compat \
     kernel-module-nft-nat \
