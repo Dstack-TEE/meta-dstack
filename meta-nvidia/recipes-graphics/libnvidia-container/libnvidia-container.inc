@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = "\
 "
 
 ELF_TOOLCHAIN_VERSION = "0.7.1"
-NVIDIA_MODPROBE_VERSION = "550.40.07"
+NVIDIA_MODPROBE_VERSION = "550.54.14"
 LIBTIRPC_VERSION = "1.3.4"
 
 SRC_URI = "git://github.com/NVIDIA/libnvidia-container.git;protocol=https;name=libnvidia;branch=release-1.14 \
@@ -23,8 +23,8 @@ SRC_URI = "git://github.com/NVIDIA/libnvidia-container.git;protocol=https;name=l
 
 # SRCREV = "a4ef85ebc86688eeef667271abbc7cd4f1110cf6"
 SRCREV_libnvidia = "d2eb0afe86f0b643e33624ee64f065dd60e952d4"
-# Nvidia modprobe version 495.44
-SRCREV_modprobe = "d6bce304f30b6661c9ab6a993f49340eafca7a7e"
+# Nvidia modprobe version 550.54.14
+SRCREV_modprobe = "149440ca0654d928f27df5ebff485a122bfe43b1"
 SRCREV_FORMAT = "libnvidia_modprobe"
 
 DEPENDS = " \
