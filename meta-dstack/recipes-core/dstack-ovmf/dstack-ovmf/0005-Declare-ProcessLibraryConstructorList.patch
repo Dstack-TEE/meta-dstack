@@ -1,6 +1,6 @@
-From 596f2e3bd7292c8f22cfe01ec95b8b46ce1bc8a1 Mon Sep 17 00:00:00 2001
+From 216280451e52ba73bc408e58c5a3b13d863e350f Mon Sep 17 00:00:00 2001
 From: Kevin Wang <wy721@qq.com>
-Date: Mon, 4 Nov 2024 04:35:18 +0000
+Date: Wed, 18 Mar 2026 08:44:21 +0000
 Subject: [PATCH] Declare ProcessLibraryConstructorList
 
 ---
