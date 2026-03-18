@@ -19,31 +19,16 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build guest images
-        run: |
-          source dev-setup bb-build
-          make dist DIST_DIR=$PWD/dist BB_BUILD_DIR=$PWD/bb-build
-
-      - name: Generate reproduce.sh
-        run: |
-          cat > dist/reproduce.sh <<EOF
-          #!/bin/bash
-          set -e
-          git clone https://github.com/Dstack-TEE/meta-dstack.git
-          cd meta-dstack/
-          git checkout ${{ github.sha }}
-          git submodule update --init --recursive
-          cd repro-build && ./repro-build.sh -n
-          EOF
-          chmod +x dist/reproduce.sh
+      - name: Reproducible build
+        run: cd repro-build && ./repro-build.sh -n
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: guest-images
           path: |
-            dist/*.tar.gz
-            dist/reproduce.sh
+            repro-build/dist/*.tar.gz
+            repro-build/dist/reproduce.sh
           retention-days: 30
 
       - name: Create tag and release
@@ -55,6 +40,6 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           gh release create "$TAG" \
-            dist/*.tar.gz \
-            dist/reproduce.sh \
+            repro-build/dist/*.tar.gz \
+            repro-build/dist/reproduce.sh \
             --title "$TAG" --generate-notes
