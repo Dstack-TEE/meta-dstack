@@ -47,6 +47,19 @@ IMAGE_INSTALL = "\
     kernel-module-nft-reject \
     kernel-module-nft-reject-inet \
     kernel-module-nft-hash \
+    kernel-module-ip-set \
+    kernel-module-ip-set-hash-ip \
+    kernel-module-ip-set-hash-net \
+    kernel-module-ip-set-hash-ipport \
+    kernel-module-ip-set-hash-ipportip \
+    kernel-module-ip-set-hash-ipportnet \
+    kernel-module-ip-set-hash-netiface \
+    kernel-module-ip-set-bitmap-ip \
+    kernel-module-ip-set-bitmap-port \
+    kernel-module-ip-set-list-set \
+    kernel-module-xt-set \
+    kernel-module-xt-nflog \
+    kernel-module-xt-physdev \
     fuse3 \
     fuse3-utils \
     pigz \
