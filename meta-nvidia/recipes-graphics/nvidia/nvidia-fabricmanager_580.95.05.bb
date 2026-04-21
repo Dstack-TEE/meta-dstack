@@ -39,37 +39,12 @@ do_install() {
     install -m 0644 ${S}/lib/libnvfm.so.1 ${D}${libdir}
     ln -sf libnvfm.so.1 ${D}${libdir}/libnvfm.so
 
-    # Install config files
+    # Install config + topology files (glob picks up new SKUs in future archives)
     install -m 0644 ${S}/etc/fabricmanager.cfg ${D}${datadir}/nvidia/nvswitch/
     install -m 0644 ${S}/etc/fabricmanager_multinode.cfg ${D}${datadir}/nvidia/nvswitch/
-
-    # Install topology files
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgx2_hgx2_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxa100_hgxa100_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxh100_hgxh100_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxh800_hgxh800_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/mgxh20_nvl16_topology ${D}${datadir}/nvidia/nvswitch/
-
-    # Install multi-node topology files
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_8gpus_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_16gpus_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_16gpus_trunk_connections.csv ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_16gpus_osfp_connections.csv ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_16gpus_osfp_cable_connections.csv ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_32gpus_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_32gpus_trunk_connections.csv ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_32gpus_osfp_connections.csv ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/dgxgh200_hgxgh200_32gpus_osfp_cable_connections.csv ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gh200_nvlink_32gpus_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl36r1_c2g4_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl36r1_c2g2_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl72r1_c2g4_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl72r2_c2g4_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl72r2_c2g2_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl576r16_c2g4_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl8r1_c2g4_etf_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl8r1_c2g4_etf_nso_topology ${D}${datadir}/nvidia/nvswitch/
-    install -m 0644 ${S}/share/nvidia/nvswitch/gb200_nvl4r1_c2g2_etf_topology ${D}${datadir}/nvidia/nvswitch/
+    for f in ${S}/share/nvidia/nvswitch/*; do
+        [ -f "$f" ] && install -m 0644 "$f" ${D}${datadir}/nvidia/nvswitch/
+    done
 
     # Install systemd service
     install -m 0644 ${S}/systemd/nvidia-fabricmanager.service ${D}${systemd_system_unitdir}
