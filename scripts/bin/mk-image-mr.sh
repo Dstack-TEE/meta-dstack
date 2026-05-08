@@ -99,7 +99,7 @@ echo "Creating final archive: $OUTPUT_FILE"
 
 # Change to the flattened directory and create archive without directory structure
 cd "$FLATTEN_DIR"
-tar -czf "../$OUTPUT_FILE" *
+tar -czf "../$OUTPUT_FILE" -- *
 cd - >/dev/null
 
 # Move the final file to the current working directory
