@@ -10,6 +10,7 @@ IMAGE_INSTALL = "\
     systemd \
     netbase \
     iptables \
+    nftables \
     docker-moby \
     docker-compose \
     tdx-guest-ko \
