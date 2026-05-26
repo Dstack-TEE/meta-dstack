@@ -69,7 +69,7 @@ GIT_REVISION=$(git rev-parse HEAD 2>/dev/null || echo "<unknown>")
 # Lift the OVMF variant tag straight out of the dstack-ovmf recipe so verifiers
 # know which RTMR[0] event layout to expect. Required: the recipe must declare
 # OVMF_VARIANT alongside PV.
-OVMF_VARIANT=$(bitbake-getvar --value OVMF_VARIANT -r dstack-ovmf | tail -n1)
+OVMF_VARIANT=$(bitbake-getvar --value OVMF_VARIANT -r dstack-ovmf)
 if [ -z "$OVMF_VARIANT" ]; then
     echo "Error: dstack-ovmf recipe is missing OVMF_VARIANT" >&2
     exit 1
