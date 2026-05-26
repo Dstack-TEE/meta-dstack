@@ -27,9 +27,30 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
            file://0005-Declare-ProcessLibraryConstructorList.patch \
            "
 
-PV = "edk2-stable202505"
-SRCREV = "6951dfe7d59d144a3a980bd7eda699db2d8554ac"
+# Pinned to edk2-stable202502 (Feb 2025) instead of the latest stable202505.
+# Between these two tags, six commits land in OvmfPkg / MdeModulePkg that
+# rewrite the boot-time RTMR[0] event chain:
+#   fb56dc78ef  QemuFwCfgLib: cache + measurement (adds fw_cfg BootMenu, bootorder)
+#   45a56d7505  OvmfPkg: add BootManagerMenuApp to dependencies
+#   9d9e3a2ba8  OvmfPkg: use BootManagerMenuApp as BootManagerMenu (Boot0000 hash changes)
+#   d433b4c8e4  PlatformBootManagerLib: register UiApp as optional boot option (new Boot0001)
+#   dd5cce3e53  PlatformBootManagerCommonLib: set UiApp as an optional boot option
+#   cd76265f1a  OvmfPkg: Enable Smbios measurement (adds EV_EFI_HANDOFF_TABLES whose
+#               digest is sha384(filtered QEMU SMBIOS table) — varies with -m / -cpu /
+#               -smbios type=1 and so cannot be precomputed from VmConfig alone)
+# stable202502 contains none of them and so produces the same 13-event RTMR[0]
+# layout as the legacy 3a3b12cb snapshot dstack used pre-upgrade, while still
+# carrying 5 months of post-Sep-2024 EDK2 fixes (incl. CVEs).
+PV = "edk2-stable202502"
+SRCREV = "fbe0805b2091393406952e84724188f8c1941837"
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>edk2-stable.*)"
+
+# Tag identifying the OVMF boot-time RTMR[0] event layout this build produces.
+# Consumed by mkimage.sh to stamp `ovmf_variant` into the image metadata.json so
+# verifiers can pick the matching dstack-mr code path without parsing PV.
+# Keep this in sync with the OvmfVariant enum in dstack/dstack-types when
+# bumping PV.
+OVMF_VARIANT = "pre202505"
 
 CVE_PRODUCT = "edk2"
 CVE_VERSION = "${@d.getVar('PV').split('-')[1]}"
