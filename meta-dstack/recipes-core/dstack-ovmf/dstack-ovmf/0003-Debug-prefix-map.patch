@@ -28,7 +28,7 @@ index cca699c4a8..e758bd8b4e 100755
 -DEFINE GCC_PP_FLAGS                = -E -x assembler-with-cpp -include AutoGen.h
 +DEFINE GCC_ASM_FLAGS               = -c -x assembler -imacros AutoGen.h ENV(GCC_PREFIX_MAP)
 +DEFINE GCC_PP_FLAGS                = -E -x assembler-with-cpp -include AutoGen.h ENV(GCC_PREFIX_MAP)
- DEFINE GCC_VFRPP_FLAGS             = -x c -E -DVFRCOMPILE --include $(MODULE_NAME)StrDefs.h
+ DEFINE GCC_VFRPP_FLAGS             = -x c -E -P -DVFRCOMPILE --include $(MODULE_NAME)StrDefs.h
  DEFINE GCC_ASLPP_FLAGS             = -x c -E -include AutoGen.h
  DEFINE GCC_ASLCC_FLAGS             = -x c
 @@ -1095,7 +1095,7 @@ DEFINE GCC5_LOONGARCH64_PP_FLAGS           = -mabi=lp64d -march=loongarch64 DEF(

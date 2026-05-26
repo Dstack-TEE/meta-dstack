@@ -65,7 +65,17 @@ $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 $Q cp $ROOTFS_IMAGE ${OUTPUT_DIR}/rootfs.img.verity
 
 GIT_REVISION=$(git rev-parse HEAD 2>/dev/null || echo "<unknown>")
-echo "Generating metadata.json to ${OUTPUT_DIR}/metadata.json"
+
+# Lift the OVMF variant tag straight out of the dstack-ovmf recipe so verifiers
+# know which RTMR[0] event layout to expect. Required: the recipe must declare
+# OVMF_VARIANT alongside PV.
+OVMF_VARIANT=$(bitbake-getvar --value OVMF_VARIANT -r dstack-ovmf)
+if [ -z "$OVMF_VARIANT" ]; then
+    echo "Error: dstack-ovmf recipe is missing OVMF_VARIANT" >&2
+    exit 1
+fi
+
+echo "Generating metadata.json to ${OUTPUT_DIR}/metadata.json (ovmf_variant=$OVMF_VARIANT)"
 
 KARG0="console=ttyS0 init=/init panic=1 net.ifnames=0 biosdevname=0"
 KARG1="mce=off oops=panic pci=noearly pci=nommconf random.trust_cpu=y random.trust_bootloader=n tsc=reliable no-kvmclock"
@@ -81,7 +91,8 @@ cat <<EOF > ${OUTPUT_DIR}/metadata.json
     "version": "$DSTACK_VERSION",
     "git_revision": "$GIT_REVISION",
     "shared_ro": true,
-    "is_dev": ${IS_DEV}
+    "is_dev": ${IS_DEV},
+    "ovmf_variant": "$OVMF_VARIANT"
 }
 EOF
 
