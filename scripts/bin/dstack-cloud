@@ -205,6 +205,13 @@ class GcpConfig:
     tags: List[str] = field(default_factory=list)
     labels: Dict[str, str] = field(default_factory=dict)
 
+    # Scheduling: provisioning model. "STANDARD" (default) or "SPOT".
+    # SPOT instances are required on projects without on-demand
+    # NVIDIA_H100_GPUS quota (most projects, as of 2026); GCP
+    # preempts them with ~30s notice and a max ~24h lifetime, but
+    # they're billed at a steep discount.
+    provisioning_model: str = "STANDARD"
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -232,7 +239,8 @@ class GcpConfig:
             "service_account": "",
             "scopes": [],
             "tags": [],
-            "labels": {}
+            "labels": {},
+            "provisioning_model": "STANDARD"
         }
 
 
@@ -1381,6 +1389,20 @@ class CloudDeploymentManager:
             f"--create-disk=name={config.instance_name}-shared,size=1GB,type=pd-balanced,image={shared_image},auto-delete=yes",
             "--maintenance-policy=TERMINATE",
         ]
+
+        provisioning = (config.provisioning_model or "STANDARD").upper()
+        if provisioning == "SPOT":
+            create_args.append("--provisioning-model=SPOT")
+            # STOP (vs. the gcloud default DELETE) preserves the
+            # boot/data disks across preemption so the instance can
+            # be restarted with `dstack-cloud start` and keep its
+            # LUKS-encrypted data disk intact.
+            create_args.append("--instance-termination-action=STOP")
+        elif provisioning != "STANDARD":
+            raise RuntimeError(
+                f"Unsupported provisioning_model: {config.provisioning_model!r} "
+                f"(expected 'STANDARD' or 'SPOT')"
+            )
 
         if config.network != "default":
             create_args.append(f"--network={config.network}")
