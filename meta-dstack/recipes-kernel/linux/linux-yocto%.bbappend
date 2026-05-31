@@ -11,6 +11,12 @@ SRC_URI += "file://dstack-docker.cfg \
             file://dstack.cfg \
             file://dstack.scc"
 
+# TDX guests need DMA_DIRECT_REMAP for shared (decrypted) coherent DMA so
+# devices like NVMe can complete I/O. INTEL_TDX_GUEST does not select it
+# upstream (and the symbol is promptless, so a .cfg fragment cannot set it),
+# hence this Kconfig patch. Scoped to tdx machines only.
+SRC_URI:append:tdx = " file://0001-x86-tdx-select-dma-direct-remap.patch"
+
 KERNEL_FEATURES:append = " features/cgroups/cgroups.scc \
                           features/overlayfs/overlayfs.scc \
                           features/netfilter/netfilter.scc \
