@@ -2,6 +2,7 @@ From 672d571ed826157e15969b7ba0ec46ab622a7c44 Mon Sep 17 00:00:00 2001
 From: Kevin Wang <wy721@qq.com>
 Date: Wed, 18 Mar 2026 08:44:20 +0000
 Subject: [PATCH] Debug prefix map
+Upstream-Status: Inappropriate [dstack-specific OVMF build/reproducibility tweak]
 
 ---
  BaseTools/Conf/tools_def.template | 18 +++++++++---------

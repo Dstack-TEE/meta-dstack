@@ -2,6 +2,7 @@ From 9133327256392a17883ad3ed91ad63ecbac50f08 Mon Sep 17 00:00:00 2001
 From: Kevin Wang <wy721@qq.com>
 Date: Wed, 18 Mar 2026 08:44:21 +0000
 Subject: [PATCH] Reproduciable
+Upstream-Status: Inappropriate [dstack-specific OVMF build/reproducibility tweak]
 
 ---
  BaseTools/Source/C/GenFw/Elf64Convert.c       |  8 ++++---
