@@ -60,7 +60,6 @@ IMAGE_INSTALL = "\
     kernel-module-xt-set \
     kernel-module-xt-nflog \
     kernel-module-xt-physdev \
-||||||| base
     fuse3 \
     fuse3-utils \
     pigz \

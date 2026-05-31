@@ -16,7 +16,9 @@ fi
 THIS_SCRIPT=$(realpath "$THIS_SCRIPT")
 THIS_DIR=$(dirname "$THIS_SCRIPT")
 
-LAYERS="$THIS_DIR/meta-confidential-compute \
+LAYERS="$THIS_DIR/meta-yocto/meta-poky \
+    $THIS_DIR/meta-yocto/meta-yocto-bsp \
+    $THIS_DIR/meta-confidential-compute \
     $THIS_DIR/meta-openembedded/meta-oe \
     $THIS_DIR/meta-openembedded/meta-python \
     $THIS_DIR/meta-openembedded/meta-networking \
@@ -46,7 +48,7 @@ for script in $THIS_DIR/setup.d/*.sh; do
 done
 
 pushd "$BUILD_DIR"
-BDIR="." TEMPLATECONF=$THIS_DIR/meta-yocto/meta-poky/conf/templates/default source $OE_INIT
+BDIR="." TEMPLATECONF=$THIS_DIR/openembedded-core/meta/conf/templates/default source $OE_INIT
 popd
 
 bitbake-layers add-layer $LAYERS
