@@ -70,7 +70,6 @@ inherit deploy
 
 PARALLEL_MAKE = ""
 
-S = "${WORKDIR}/git"
 
 DEPENDS = "nasm-native acpica-native ovmf-native util-linux-native"
 
