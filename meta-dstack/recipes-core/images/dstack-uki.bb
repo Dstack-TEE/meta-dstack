@@ -100,8 +100,10 @@ python do_uki() {
     native_sysroot = d.getVar('RECIPE_SYSROOT_NATIVE')
     staging_libdir = d.getVar('STAGING_LIBDIR_NATIVE')
 
-    # Find Python version directory for native packages
-    python_sitepackages = os.path.join(staging_libdir, 'python3.13', 'site-packages')
+    # Find Python version directory for native packages (version-agnostic)
+    import glob
+    _pyglob = sorted(glob.glob(os.path.join(staging_libdir, 'python3.*', 'site-packages')))
+    python_sitepackages = _pyglob[-1] if _pyglob else os.path.join(staging_libdir, 'python3', 'site-packages')
 
     # Set environment for ukify
     env = os.environ.copy()
