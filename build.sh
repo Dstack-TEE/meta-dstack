@@ -306,11 +306,11 @@ download_image() {
 
     TAG=v$VERSION
     if [ x"$IS_DEV" = x"1" ]; then
-        BASENAME=dstack-dev-$VERSION
+        BASENAME=dstack-cloud-dev-$VERSION
     else
-        BASENAME=dstack-$VERSION
+        BASENAME=dstack-cloud-$VERSION
     fi
-    URL=https://github.com/Dstack-TEE/meta-dstack/releases/download/$TAG/$BASENAME.tar.gz
+    URL=https://github.com/Dstack-TEE/meta-dstack-cloud/releases/download/$TAG/$BASENAME.tar.gz
     if [ -d $IMAGES_DIR/$BASENAME ]; then
         echo "Image already exists"
     else

@@ -19,4 +19,4 @@ do_install() {
 
 # Ensure that the package is always installed
 PACKAGES = "${PN}"
-FILES:${PN}:append= "${base_sbindir}/ldconfig.real"
+FILES:${PN}:append = "${base_sbindir}/ldconfig.real"

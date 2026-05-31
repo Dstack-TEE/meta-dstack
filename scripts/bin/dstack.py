@@ -144,14 +144,14 @@ def gen_vm_config(vm_dir, host_port, manifest=None, os_image_hash=None):
 
 
 @dataclass
-class DStackConfig:
-    """Configuration for DStack client."""
+class DstackConfig:
+    """Configuration for dstack client."""
     docker_registry: Optional[str] = None
     default_image_name: str = ''
     qemu_path: str = 'qemu-system-x86_64'
 
     @classmethod
-    def load(cls) -> 'DStackConfig':
+    def load(cls) -> 'DstackConfig':
         """Load configuration from file."""
         cfgs = load_configs_merged(generate_config_paths())
 
@@ -167,10 +167,10 @@ class DStackConfig:
         return me
 
 
-class DStackManager:
+class DstackManager:
     def __init__(self):
         self.run_path = os.path.abspath(os.getenv('RUN_PATH', './vms'))
-        self.config = DStackConfig.load()
+        self.config = DstackConfig.load()
 
     def _generate_instance_id(self) -> str:
         """Generate a random instance ID."""
@@ -365,7 +365,7 @@ class DStackManager:
             case 'listed':
                 return gpus
             case 'all':
-                return DStackManager.collect_all_gpus()
+                return DstackManager.collect_all_gpus()
             case _:
                 raise ValueError(
                     f"Invalid GPU attach mode: {gpus['attach_mode']}")
@@ -797,7 +797,7 @@ def write_to_sysfs(path, value):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='DStack VM Management Tool')
+    parser = argparse.ArgumentParser(description='dstack VM Management Tool')
     subparsers = parser.add_subparsers(dest='command', help='Commands')
 
     # Setup command
@@ -849,10 +849,10 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'new':
-        manager = DStackManager()
+        manager = DstackManager()
         manager.setup_instance(args)
     elif args.command == 'run':
-        manager = DStackManager()
+        manager = DstackManager()
         thread = start_server(args.dir, args.kp_port)
         manager.run_instance(args.dir, thread.host_port,
                              imgdir=args.imgdir, dry_run=args.dry_run)

@@ -1,4 +1,4 @@
-SUMMARY = "Dstack initramfs files"
+SUMMARY = "dstack initramfs files"
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
@@ -9,7 +9,8 @@ FILES:${PN} = "*"
 
 inherit allarch
 
-S = "${WORKDIR}"
+UNPACKDIR = "${WORKDIR}/sources"
+S = "${UNPACKDIR}"
 
 do_install() {
     install -d ${D}/

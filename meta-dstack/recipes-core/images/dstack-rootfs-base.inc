@@ -13,7 +13,6 @@ IMAGE_INSTALL = "\
     nftables \
     docker-moby \
     docker-compose \
-    tdx-guest-ko \
     dstack-guest \
     wireguard-tools \
     cryptsetup \
@@ -61,6 +60,7 @@ IMAGE_INSTALL = "\
     kernel-module-xt-set \
     kernel-module-xt-nflog \
     kernel-module-xt-physdev \
+||||||| base
     fuse3 \
     fuse3-utils \
     pigz \
@@ -69,6 +69,7 @@ IMAGE_INSTALL = "\
     e2fsprogs-resize2fs \
     gptfdisk \
     parted \
+    tpm2-tools \
 "
 
 IMAGE_NAME_SUFFIX ?= ""
@@ -186,5 +187,6 @@ mkdirs() {
     mkdir -p ${IMAGE_ROOTFS}/dstack
     mkdir -p ${IMAGE_ROOTFS}/etc/wireguard
     mkdir -p ${IMAGE_ROOTFS}/var/lib/docker
+    mkdir -p ${IMAGE_ROOTFS}/var/lib/containerd
     ln -sf dstack ${IMAGE_ROOTFS}/tapp
 }

@@ -24,6 +24,7 @@ LAYERS="$THIS_DIR/meta-confidential-compute \
     $THIS_DIR/meta-virtualization \
     $THIS_DIR/meta-rust-bin \
     $THIS_DIR/meta-security \
+    $THIS_DIR//meta-security/meta-tpm \
     $THIS_DIR/meta-dstack"
 
 if [ -z "$1" ]; then
@@ -31,19 +32,21 @@ if [ -z "$1" ]; then
 else
     BUILD_DIR=$(realpath "$1")
 fi
-if [ ! -f "$BUILD_DIR/conf/local.conf" ]; then
-    mkdir -p "$BUILD_DIR/conf"
-    cp -f "$THIS_DIR/bb-build/conf/local.conf" "$BUILD_DIR/conf/local.conf"
-fi
 
-OE_INIT=$THIS_DIR/poky/oe-init-build-env
+# Sync build config from meta-dstack/conf (always overwrite)
+CONF_SRC=$THIS_DIR/meta-dstack/conf
+mkdir -p "$BUILD_DIR/conf"
+cp -f "$CONF_SRC/local.conf" "$BUILD_DIR/conf/local.conf"
+cp -rf "$CONF_SRC/multiconfig" "$BUILD_DIR/conf/"
+
+OE_INIT=$THIS_DIR/openembedded-core/oe-init-build-env
 
 for script in $THIS_DIR/setup.d/*.sh; do
     source "$script"
 done
 
-pushd .
-source $OE_INIT $BUILD_DIR
+pushd "$BUILD_DIR"
+BDIR="." TEMPLATECONF=$THIS_DIR/meta-yocto/meta-poky/conf/templates/default source $OE_INIT
 popd
 
 bitbake-layers add-layer $LAYERS

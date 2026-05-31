@@ -53,7 +53,7 @@ do_install:append() {
     cp ${NVIDIA_SRC}/firmware/* ${D}${libdir}/firmware/nvidia/${PV}/
 }
 
-FILES:${PN}:append= " ${libdir} ${bindir}"
+FILES:${PN}:append = " ${libdir} ${bindir}"
 
 
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

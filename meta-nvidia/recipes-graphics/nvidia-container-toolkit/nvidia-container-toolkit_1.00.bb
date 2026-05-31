@@ -42,7 +42,7 @@ do_install() {
     # Ensure the installation directory exists
     install -d ${D}/etc/nvidia-container-runtime
     # Install the config.toml file
-    install -m 0644 ${WORKDIR}/config.toml ${D}/etc/nvidia-container-runtime/config.toml
+    install -m 0644 ${UNPACKDIR}/config.toml ${D}/etc/nvidia-container-runtime/config.toml
 }
 
 INSANE_SKIP:${PN} += "already-stripped buildpaths textrel"

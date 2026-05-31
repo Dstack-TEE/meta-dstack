@@ -22,6 +22,30 @@ BB_DIR_B=${BB_DIR_B:-${BUILD_DIR_B}/bb-build}
 ROOTFS_A=${BB_DIR_A}/${ROOTFS_PATH}
 ROOTFS_B=${BB_DIR_B}/${ROOTFS_PATH}
 
+# Only compare these image paths (relative to $BUILD_DIR_*/images).
+# Everything else is ignored to avoid known non-reproducible artifacts.
+COMPARE_IMAGE_WHITELIST=(
+    "bzImage"
+    "digest.txt"
+    "initramfs.cpio.gz"
+    "metadata.json"
+    "ovmf.fd"
+    "rootfs.img.verity"
+    "sha256sum.txt"
+    "gcp/efi-root/EFI/BOOT/BOOTX64.EFI"
+)
+
+is_whitelisted_image() {
+    local rel_path="$1"
+    local item
+    for item in "${COMPARE_IMAGE_WHITELIST[@]}"; do
+        if [ "$rel_path" = "$item" ] || [[ "$rel_path" == */"$item" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 check_files() {
     local path_a="$1"
     local path_b="$2"
@@ -121,24 +145,30 @@ analyze() {
 
 check_images() {
     echo -e "${YELLOW}Checking image files...${NC}"
-    find $BUILD_DIR_A/images -type f | while read file_a; do
-        rel_path=$(echo ${file_a} | sed "s#${BUILD_DIR_A}/images/##g")
-        file_b=$BUILD_DIR_B/images/$rel_path
-        if [ ! -f "$file_b" ]; then
-            echo -e "${RED}$rel_path is not found in $BUILD_DIR_B/images/${NC}"
+    local differences=0
+    while IFS= read -r file_a; do
+        rel_path=$(echo "$file_a" | sed "s#${BUILD_DIR_A}/images/##g")
+        file_b="$BUILD_DIR_B/images/$rel_path"
+        if ! is_whitelisted_image "$rel_path"; then
             continue
         fi
-        hash_a=$(md5sum $file_a | cut -d' ' -f 1)
-        hash_b=$(md5sum $file_b | cut -d' ' -f 1)
+        if [ ! -f "$file_b" ]; then
+            echo -e "${RED}$rel_path is not found in $BUILD_DIR_B/images/${NC}"
+            differences=$((differences + 1))
+            continue
+        fi
+        hash_a=$(md5sum "$file_a" | cut -d' ' -f 1)
+        hash_b=$(md5sum "$file_b" | cut -d' ' -f 1)
         if [ "$hash_a" != "$hash_b" ]; then
             echo -e "${RED}Hash mismatch for $rel_path:${NC}"
             echo -e "${RED}$hash_a $file_a${NC}"
             echo -e "${RED}$hash_b $file_b${NC}"
-            return 1
+            differences=$((differences + 1))
         else
             echo -e "${GREEN}Match for $rel_path${NC}"
         fi
-    done
+    done < <(find "$BUILD_DIR_A/images" -type f)
+    return $differences
 }
 
 check() {

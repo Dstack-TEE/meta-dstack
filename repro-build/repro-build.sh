@@ -51,13 +51,16 @@ build_to() {
         $BUILDER_NAME bash -e -c "$BUILD_CMD"
 }
 
-build_to $HOST_BUILD_DIR_A DSTACK_TAR_RELEASE=1
+# Only build production flavors (no dev) for reproducible builds
+RELEASE_FLAVORS="prod nvidia"
+
+build_to $HOST_BUILD_DIR_A "FLAVORS='$RELEASE_FLAVORS' DSTACK_TAR_RELEASE=1"
 
 DIST_DIR=${THIS_DIR}/dist
 mkdir -p $DIST_DIR
 mv $HOST_BUILD_DIR_A/images/*.tar.gz $DIST_DIR/
 if [ $NO_CHECK -eq 0 ]; then
-    build_to $HOST_BUILD_DIR_B
+    build_to $HOST_BUILD_DIR_B "FLAVORS='$RELEASE_FLAVORS'"
     ${THIS_DIR}/check.sh $HOST_BUILD_DIR_A $HOST_BUILD_DIR_B
 fi
 
@@ -72,8 +75,8 @@ cat <<EOF | tee $DIST_DIR/reproduce.sh
 #!/bin/bash
 set -e
 
-git clone https://github.com/Dstack-TEE/meta-dstack.git
-cd meta-dstack/
+git clone https://github.com/Phala-Network/meta-dstack-cloud.git
+cd meta-dstack-cloud/
 git checkout $(git -C $THIS_DIR rev-parse HEAD)
 git submodule update --init --recursive
 cd repro-build && ./repro-build.sh -n
