@@ -22,9 +22,7 @@ BUILD_CFLAGS += "-Wno-error=stringop-overflow"
 SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
            file://0001-Update-path-to-native-BaseTools.patch \
            file://0002-BaseTools-makefile-adjust-to-build-in-under-bitbake.patch \
-           file://0003-Debug-prefix-map.patch \
-           file://0004-Reproduciable.patch \
-           file://0005-Declare-ProcessLibraryConstructorList.patch \
+           file://0005-UefiCpuPkg-CpuExceptionHandlerLib-fix-push-instructi.patch \
            "
 
 # Pinned to edk2-stable202502 (Feb 2025) instead of the latest stable202505.
@@ -41,8 +39,12 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
 # stable202502 contains none of them and so produces the same 13-event RTMR[0]
 # layout as the legacy 3a3b12cb snapshot dstack used pre-upgrade, while still
 # carrying 5 months of post-Sep-2024 EDK2 fixes (incl. CVEs).
-PV = "edk2-stable202502"
-SRCREV = "fbe0805b2091393406952e84724188f8c1941837"
+# NOTE(wrynose): the stable202502 pin is INCOMPATIBLE with Yocto wrynose's NASM
+# 3.01 (edk2 ExceptionHandlerAsm fails to assemble). Bumped to stable202511 (same
+# as oe-core wrynose) to build. This changes the RTMR[0] event chain — a new
+# OvmfVariant baseline in dstack-mr / dstack-types is required for attestation.
+PV = "edk2-stable202511"
+SRCREV = "46548b1adac82211d8d11da12dd914f41e7aa775"
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>edk2-stable.*)"
 
 # Tag identifying the OVMF boot-time RTMR[0] event layout this build produces.
@@ -50,7 +52,7 @@ UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>edk2-stable.*)"
 # verifiers can pick the matching dstack-mr code path without parsing PV.
 # Keep this in sync with the OvmfVariant enum in dstack/dstack-types when
 # bumping PV.
-OVMF_VARIANT = "pre202505"
+OVMF_VARIANT = "stable202511"
 
 CVE_PRODUCT = "edk2"
 CVE_VERSION = "${@d.getVar('PV').split('-')[1]}"
