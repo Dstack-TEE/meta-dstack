@@ -23,9 +23,10 @@ dist: images
 	$(foreach flavor,$(FLAVORS),./mkimage.sh --dist-name $(call flavor_to_dist,$(flavor)) --flavor $(flavor);)
 
 # Build common artifacts (shared across all flavors)
-# dstack-guest is built here to avoid concurrent build conflicts in multiconfig
+# dstack-guest is built here first to warm sstate/downloads and avoid concurrent
+# fetch/build conflicts when the per-flavor multiconfigs build it in parallel.
 images-common:
-	bitbake virtual/kernel dstack-initramfs dstack-ovmf
+	bitbake virtual/kernel dstack-initramfs dstack-ovmf dstack-guest
 
 # Build flavor-specific artifacts using multiconfig (serial to avoid deadlock warnings)
 images-flavors:

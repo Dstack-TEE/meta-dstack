@@ -4,6 +4,12 @@ set -e
 DSTACK_TAR_RELEASE=${DSTACK_TAR_RELEASE:-1}
 ENABLE_UKI_IMAGE=${ENABLE_UKI_IMAGE:-1}
 
+# Fixed GPT GUIDs so partitioned images are reproducible (sgdisk randomizes by
+# default). Partitions are located by PARTLABEL, not GUID, so these are arbitrary.
+DSTACK_DISK_GUID=${DSTACK_DISK_GUID:-d5acc000-0000-4000-8000-000000000000}
+DSTACK_ROOTFS_PART_GUID=${DSTACK_ROOTFS_PART_GUID:-d5acc000-0000-4000-8000-000000000001}
+DSTACK_EFI_PART_GUID=${DSTACK_EFI_PART_GUID:-d5acc000-0000-4000-8000-000000000002}
+
 # Parse command line arguments
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -61,8 +67,20 @@ UKI_IMAGE=${FLAVOR_IMG_DIR}/dstack-uki.efi
 
 # Verity env is in the flavor-specific work-shared directory
 VERITY_ENV_FILE=${BB_BUILD_DIR}/tmp-mc-${FLAVOR}/work-shared/tdx/dm-verity/dstack-rootfs.squashfs.verity.env
+if [ ! -f "${VERITY_ENV_FILE}" ]; then
+    echo "Error: verity env not found: ${VERITY_ENV_FILE}" >&2
+    echo "Build the rootfs first, e.g.: bitbake mc:${FLAVOR}:dstack-rootfs" >&2
+    exit 1
+fi
 echo "Loading verity env from ${VERITY_ENV_FILE}"
-source ${VERITY_ENV_FILE}
+# shellcheck source=/dev/null
+source "${VERITY_ENV_FILE}"
+
+# Bare-metal partitioning needs sgdisk (gdisk)
+if ! command -v sgdisk >/dev/null 2>&1; then
+    echo "Error: sgdisk not found; install 'gdisk' to build the partitioned rootfs." >&2
+    exit 1
+fi
 
 DSTACK_VERSION=$(bitbake-getvar --value DISTRO_VERSION | tail -1)
 
@@ -140,7 +158,12 @@ create_partitioned_rootfs() {
         local root_end_sector=$((root_start_sector + (rootfs_size_aligned / sector) - 1))
 
         sgdisk --zap-all "$output_img" >/dev/null
-        sgdisk --new=1:${root_start_sector}:${root_end_sector} --typecode=1:8300 --change-name=1:'dstack-rootfs' "$output_img" >/dev/null
+        # Fixed GUIDs keep the image bit-for-bit reproducible (GPT otherwise
+        # randomizes disk/partition GUIDs). The rootfs is located by PARTLABEL.
+        sgdisk --disk-guid="${DSTACK_DISK_GUID}" \
+               --new=1:${root_start_sector}:${root_end_sector} --typecode=1:8300 \
+               --partition-guid=1:"${DSTACK_ROOTFS_PART_GUID}" \
+               --change-name=1:'dstack-rootfs' "$output_img" >/dev/null
 
         dd if="$rootfs_img" of="$output_img" bs=$align seek=$((rootfs_start / align)) conv=notrunc status=none
     )
@@ -171,8 +194,13 @@ build_uki_disk_image() {
         local root_end_sector=$((root_start_sector + (rootfs_size_aligned / sector) - 1))
 
         sgdisk --zap-all "$disk_img" >/dev/null
-        sgdisk --new=1:${efi_start_sector}:${efi_end_sector} --typecode=1:ef00 --change-name=1:'EFI System Partition' "$disk_img" >/dev/null
-        sgdisk --new=2:${root_start_sector}:${root_end_sector} --typecode=2:8300 --change-name=2:'dstack-rootfs' "$disk_img" >/dev/null
+        sgdisk --disk-guid="${DSTACK_DISK_GUID}" \
+               --new=1:${efi_start_sector}:${efi_end_sector} --typecode=1:ef00 \
+               --partition-guid=1:"${DSTACK_EFI_PART_GUID}" \
+               --change-name=1:'EFI System Partition' "$disk_img" >/dev/null
+        sgdisk --new=2:${root_start_sector}:${root_end_sector} --typecode=2:8300 \
+               --partition-guid=2:"${DSTACK_ROOTFS_PART_GUID}" \
+               --change-name=2:'dstack-rootfs' "$disk_img" >/dev/null
 
         local tmp_dir
         tmp_dir=$(mktemp -d)

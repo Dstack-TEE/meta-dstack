@@ -15,7 +15,7 @@ See https://github.com/Phala-Network/dstack-cloud for more details.
 ### Build commands
 
 ```bash
-git clone https://github.com/Phala-Network/meta-dstack-cloud.git
+git clone https://github.com/Dstack-TEE/meta-dstack.git
 cd meta-dstack/repro-build/
 ./repro-build.sh
 ```

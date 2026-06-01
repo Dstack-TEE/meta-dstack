@@ -88,6 +88,9 @@ python do_uki() {
     else:
         bb.fatal(f"Verity env file not found: {verity_env}")
 
+    if not root_hash or not data_size:
+        bb.fatal(f"ROOT_HASH/DATA_SIZE missing from verity env: {verity_env}")
+
     # Build cmdline
     cmdline_base = d.getVar('UKI_CMDLINE_BASE')
     cmdline = f"{cmdline_base} dstack.rootfs_hash={root_hash} dstack.rootfs_size={data_size}"
@@ -110,20 +113,24 @@ python do_uki() {
     env['PYTHONPATH'] = python_sitepackages
 
     ukify_path = os.path.join(native_sysroot, 'usr', 'bin', 'ukify')
-    ukify_cmd = f"{ukify_path} build"
-    ukify_cmd += f" --efi-arch {target_arch}"
-    ukify_cmd += f" --stub {stub}"
-    ukify_cmd += f" --linux={kernel}"
-    ukify_cmd += f" --initrd={initrd}"
-    ukify_cmd += f" --cmdline='{cmdline}'"
-    ukify_cmd += f" --tools={native_sysroot}/usr/lib/systemd/tools"
-    ukify_cmd += f" --output={output}"
+    # Pass an argument list (no shell) so values like cmdline don't need quoting
+    # and can't be split/expanded by the shell.
+    ukify_cmd = [
+        ukify_path, "build",
+        f"--efi-arch={target_arch}",
+        f"--stub={stub}",
+        f"--linux={kernel}",
+        f"--initrd={initrd}",
+        f"--cmdline={cmdline}",
+        f"--tools={native_sysroot}/usr/lib/systemd/tools",
+        f"--output={output}",
+    ]
 
-    bb.note(f"Running: {ukify_cmd}")
+    bb.note(f"Running: {' '.join(ukify_cmd)}")
     bb.note(f"PYTHONPATH: {python_sitepackages}")
 
     import subprocess
-    result = subprocess.run(ukify_cmd, shell=True, capture_output=True, text=True, env=env)
+    result = subprocess.run(ukify_cmd, capture_output=True, text=True, env=env)
     if result.stdout:
         bb.note(result.stdout)
     if result.stderr:

@@ -11,6 +11,7 @@ ACTION=$1
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
 IMAGE_NAME=${IMAGE_NAME:-dstack-rootfs}
@@ -30,7 +31,7 @@ COMPARE_IMAGE_WHITELIST=(
     "initramfs.cpio.gz"
     "metadata.json"
     "ovmf.fd"
-    "rootfs.img.verity"
+    "rootfs.img.parted.verity"
     "sha256sum.txt"
     "gcp/efi-root/EFI/BOOT/BOOTX64.EFI"
 )
