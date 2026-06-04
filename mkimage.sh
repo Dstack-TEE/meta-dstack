@@ -241,6 +241,10 @@ $Q cp $KERNEL_IMAGE ${OUTPUT_DIR}/
 $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 
 echo "Creating partitioned rootfs image at ${OUTPUT_DIR}/rootfs.img.parted.verity"
+if ! command -v sgdisk >/dev/null; then
+    echo "Error: cannot create partitioned rootfs image because 'sgdisk' is missing (install 'gdisk', or set ENABLE_UKI_IMAGE=0 and adjust tooling)" >&2
+    exit 1
+fi
 create_partitioned_rootfs "$ROOTFS_IMAGE" "${OUTPUT_DIR}/rootfs.img.parted.verity"
 
 GIT_REVISION=$(git rev-parse HEAD 2>/dev/null || echo "<unknown>")
