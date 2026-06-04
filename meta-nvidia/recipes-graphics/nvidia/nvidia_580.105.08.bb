@@ -3,12 +3,11 @@ LICENSE = "NVIDIA-Proprietary"
 LIC_FILES_CHKSUM = "file://../LICENSE;md5=92aa2e2af6aa0bcba1c3fe49da021937"
 
 NVIDIA_ARCHIVE_NAME = "NVIDIA-Linux-${TARGET_ARCH}-${PV}"
-NVIDIA_SRC = "${WORKDIR}/${NVIDIA_ARCHIVE_NAME}"
+NVIDIA_SRC = "${UNPACKDIR}/${NVIDIA_ARCHIVE_NAME}"
 SRC_URI = " \
     https://us.download.nvidia.com/tesla/${PV}/${NVIDIA_ARCHIVE_NAME}.run \
 "
-SRC_URI[md5sum] = "4d0264e320d09f614b086c3ad99a75c5"
-SRC_URI[sha256sum] = "0256867e082caf93d7b25fa7c8e69b316062a9c6c72c6e228fad7b238c6fa17d"
+SRC_URI[sha256sum] = "d9c6e8188672f3eb74dd04cfa69dd58479fa1d0162c8c28c8d17625763293475"
 
 RDEPENDS:${PN} = "nvidia-modprobe-config"
 

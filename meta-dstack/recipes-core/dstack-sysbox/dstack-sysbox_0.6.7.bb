@@ -37,7 +37,7 @@ SRC_URI = " \
     file://sysboxMgrProtobuf.pb.go \
 "
 
-S = "${WORKDIR}/sysbox"
+S = "${UNPACKDIR}/sysbox"
 
 PV = "${SYSBOX_VERSION}+git${SRCPV}"
 
@@ -63,29 +63,29 @@ SYSBOX_MGR_BUILDTAGS = "idmapped_mnt"
 do_configure() {
     # Arrange the source tree so that go.mod replace directives work.
     # All components expect to find siblings in ../ relative to themselves.
-    # The git fetcher places them in ${WORKDIR}/sysbox-{runc,fs,mgr,ipc,libs}.
+    # The git fetcher places them in ${UNPACKDIR}/sysbox-{runc,fs,mgr,ipc,libs}.
     # This is already the correct layout since they are all at the same level
-    # under ${WORKDIR}.
+    # under ${UNPACKDIR}.
 
     # sysbox-fs expects a 'bazil' subdirectory (submodule of nestybox/fuse).
     # Remove the empty submodule placeholder left by git checkout, then symlink.
-    rm -rf ${WORKDIR}/sysbox-fs/bazil
-    ln -sfn ${WORKDIR}/sysbox-fuse ${WORKDIR}/sysbox-fs/bazil
+    rm -rf ${UNPACKDIR}/sysbox-fs/bazil
+    ln -sfn ${UNPACKDIR}/sysbox-fuse ${UNPACKDIR}/sysbox-fs/bazil
 
     # Install pre-generated protobuf Go files. The upstream repo only ships
     # .proto files and expects protoc + protoc-gen-go at build time. We
     # pre-generate them to avoid the protoc native toolchain dependency.
-    install -m 0644 ${WORKDIR}/sysboxFsProtobuf.pb.go \
-        ${WORKDIR}/sysbox-ipc/sysboxFsGrpc/sysboxFsProtobuf/
-    install -m 0644 ${WORKDIR}/sysboxMgrProtobuf.pb.go \
-        ${WORKDIR}/sysbox-ipc/sysboxMgrGrpc/sysboxMgrProtobuf/
+    install -m 0644 ${UNPACKDIR}/sysboxFsProtobuf.pb.go \
+        ${UNPACKDIR}/sysbox-ipc/sysboxFsGrpc/sysboxFsProtobuf/
+    install -m 0644 ${UNPACKDIR}/sysboxMgrProtobuf.pb.go \
+        ${UNPACKDIR}/sysbox-ipc/sysboxMgrGrpc/sysboxMgrProtobuf/
 
     # Vendor dependencies for each component so that do_compile needs no
     # network access. go.sum in each repo guarantees content integrity.
     # Use -modcacherw so cached modules are writable (BitBake needs to
     # clean ${B}/pkg/mod between tasks).
     for mod in sysbox-runc sysbox-fs sysbox-mgr; do
-        cd ${WORKDIR}/$mod
+        cd ${UNPACKDIR}/$mod
         ${GO} mod vendor -modcacherw
     done
 }
@@ -104,20 +104,20 @@ do_compile() {
     export TZ=UTC
 
     # Build sysbox-runc
-    cd ${WORKDIR}/sysbox-runc
+    cd ${UNPACKDIR}/sysbox-runc
     ${GO} build -mod=vendor -buildvcs=false -trimpath \
         -tags "${SYSBOX_RUNC_BUILDTAGS}" \
         -ldflags "-buildid= -s -w -linkmode external -extldflags '-Wl,--build-id=none' ${SYSBOX_LDFLAGS}" \
         -o ${WORKDIR}/sysbox-runc-bin .
 
     # Build sysbox-fs
-    cd ${WORKDIR}/sysbox-fs
+    cd ${UNPACKDIR}/sysbox-fs
     ${GO} build -mod=vendor -buildvcs=false -trimpath \
         -ldflags "-buildid= -s -w -linkmode external -extldflags '-Wl,--build-id=none' ${SYSBOX_LDFLAGS}" \
         -o ${WORKDIR}/sysbox-fs-bin ./cmd/sysbox-fs
 
     # Build sysbox-mgr
-    cd ${WORKDIR}/sysbox-mgr
+    cd ${UNPACKDIR}/sysbox-mgr
     ${GO} build -mod=vendor -buildvcs=false -trimpath \
         -tags "${SYSBOX_MGR_BUILDTAGS}" \
         -ldflags "-buildid= -s -w -linkmode external -extldflags '-Wl,--build-id=none' ${SYSBOX_LDFLAGS}" \
@@ -134,18 +134,18 @@ do_install() {
     # Install systemd services
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -d ${D}${systemd_system_unitdir}
-        install -m 0644 ${WORKDIR}/sysbox.service ${D}${systemd_system_unitdir}
-        install -m 0644 ${WORKDIR}/sysbox-fs.service ${D}${systemd_system_unitdir}
-        install -m 0644 ${WORKDIR}/sysbox-mgr.service ${D}${systemd_system_unitdir}
+        install -m 0644 ${UNPACKDIR}/sysbox.service ${D}${systemd_system_unitdir}
+        install -m 0644 ${UNPACKDIR}/sysbox-fs.service ${D}${systemd_system_unitdir}
+        install -m 0644 ${UNPACKDIR}/sysbox-mgr.service ${D}${systemd_system_unitdir}
     fi
 
     # Install sysctl config
     install -d ${D}${sysconfdir}/sysctl.d
-    install -m 0644 ${WORKDIR}/99-sysbox-sysctl.conf ${D}${sysconfdir}/sysctl.d/
+    install -m 0644 ${UNPACKDIR}/99-sysbox-sysctl.conf ${D}${sysconfdir}/sysctl.d/
 
     # Install module autoload config
     install -d ${D}${sysconfdir}/modules-load.d
-    install -m 0644 ${WORKDIR}/50-sysbox-mod.conf ${D}${sysconfdir}/modules-load.d/
+    install -m 0644 ${UNPACKDIR}/50-sysbox-mod.conf ${D}${sysconfdir}/modules-load.d/
 
     # Create sysbox data directory
     install -d ${D}/var/lib/sysbox

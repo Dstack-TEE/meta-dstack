@@ -8,7 +8,7 @@ SRC_URI = "\
 
 do_install() {
     install -d ${D}${sysconfdir}/modprobe.d
-    install -m 0644 ${WORKDIR}/nvidia.conf ${D}${sysconfdir}/modprobe.d/
+    install -m 0644 ${UNPACKDIR}/nvidia.conf ${D}${sysconfdir}/modprobe.d/
 }
 
 FILES:${PN} = "${sysconfdir}/modprobe.d/nvidia.conf"

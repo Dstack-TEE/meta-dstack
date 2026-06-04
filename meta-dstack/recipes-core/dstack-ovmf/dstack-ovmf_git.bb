@@ -24,7 +24,7 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
            file://0002-BaseTools-makefile-adjust-to-build-in-under-bitbake.patch \
            file://0003-Debug-prefix-map.patch \
            file://0004-Reproduciable.patch \
-           file://0005-Declare-ProcessLibraryConstructorList.patch \
+           file://0005-UefiCpuPkg-CpuExceptionHandlerLib-fix-push-instructi.patch \
            "
 
 # Pinned to edk2-stable202502 (Feb 2025) instead of the latest stable202505.
@@ -41,6 +41,11 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
 # stable202502 contains none of them and so produces the same 13-event RTMR[0]
 # layout as the legacy 3a3b12cb snapshot dstack used pre-upgrade, while still
 # carrying 5 months of post-Sep-2024 EDK2 fixes (incl. CVEs).
+# NOTE(wrynose): stable202502 must be KEPT — dstack-mr cannot yet compute
+# measurements for newer edk2 (RTMR[0] event chain changed). stable202502 won't
+# assemble with wrynose's NASM 3.01 out of the box, so we backport edk2's NASM-3.0
+# CpuExceptionHandlerLib push-instruction fix (0005-UefiCpuPkg-...) to make 202502
+# build while preserving the pre202505 measurement layout dstack-mr expects.
 PV = "edk2-stable202502"
 SRCREV = "fbe0805b2091393406952e84724188f8c1941837"
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>edk2-stable.*)"
@@ -70,7 +75,6 @@ inherit deploy
 
 PARALLEL_MAKE = ""
 
-S = "${WORKDIR}/git"
 
 DEPENDS = "nasm-native acpica-native ovmf-native util-linux-native"
 

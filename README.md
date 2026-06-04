@@ -1,10 +1,10 @@
-# Yocto support for DStack Guest
+# Yocto support for dstack guest OS
 
-This project implements Yocto layer and the overall build scripts for DStack Base OS image.
+This project implements Yocto layer and the overall build scripts for dstack Base OS image.
 
 ## Build
 
-See https://github.com/Dstack-TEE/dstack for more details.
+See https://github.com/Phala-Network/dstack-cloud for more details.
 
 ## Reproducible Build The Guest Image
 
@@ -22,4 +22,4 @@ cd meta-dstack/repro-build/
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+See the LICENSE file for more details.

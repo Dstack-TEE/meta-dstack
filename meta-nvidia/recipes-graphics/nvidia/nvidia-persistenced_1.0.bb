@@ -13,5 +13,5 @@ SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 do_install() {
     install -d ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/nvidia-persistenced.service ${D}${systemd_unitdir}/system
+    install -m 0644 ${UNPACKDIR}/nvidia-persistenced.service ${D}${systemd_unitdir}/system
 }

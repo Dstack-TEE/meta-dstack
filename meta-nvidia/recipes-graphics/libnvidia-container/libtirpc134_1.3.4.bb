@@ -12,15 +12,15 @@ SRC_URI[sha256sum] = "1e0b0c7231c5fa122e06c0609a76723664d068b0dba3b8219b63e6340b
 
 # SRC_URI += "file://0001-__rpc_dtbsize-rlim_cur-instead-of-rlim_max.patch"
 
-S = "${WORKDIR}/libtirpc-${PV}"
+S = "${UNPACKDIR}/libtirpc-${PV}"
 
 inherit autotools pkgconfig
 
 DISABLE_STATIC = ""
 EXTRA_OECONF = "--disable-gssapi --enable-static"
 
-# Append -fPIC to CFLAGS
-CFLAGS:append = " -fPIC"
+# Append -fPIC to CFLAGS and fix GCC 15 compatibility
+CFLAGS:append = " -fPIC -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -std=gnu17"
 
 do_install:append() {
     rm -r ${D}${sysconfdir} ${D}${datadir} ${D}${libdir}/pkgconfig

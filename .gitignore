@@ -3,3 +3,5 @@
 *.qcow2
 __pycache__/
 /.target
+/.vscode
+/.claude

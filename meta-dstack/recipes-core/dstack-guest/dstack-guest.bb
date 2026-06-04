@@ -1,4 +1,4 @@
-SUMMARY = "Guest binaries for DStack, a decentralized computing stack"
+SUMMARY = "Guest binaries for dstack, a decentralized computing stack"
 DESCRIPTION = "${SUMMARY}"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
@@ -9,7 +9,7 @@ REPO_ROOT = "${THISDIR}/../../.."
 
 SRC_DIR = '${REPO_ROOT}/dstack'
 
-S = "${WORKDIR}/dstack"
+S = "${UNPACKDIR}/dstack"
 
 RDEPENDS:${PN} += "bash"
 
@@ -18,7 +18,7 @@ DEPENDS += "rsync-native"
 # Ensure rsync-native is built before unpack runs
 do_unpack[depends] += "rsync-native:do_populate_sysroot"
 
-DSTACK_SERVICES = "dstack-guest-agent.socket dstack-guest-agent.service dstack-prepare.service app-compose.service wg-checker.service"
+DSTACK_SERVICES = "dstack-guest-agent.service dstack-guest-agent.socket dstack-prepare.service app-compose.service wg-checker.service"
 SYSTEMD_PACKAGES = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${PN}','',d)}"
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${DSTACK_SERVICES}','',d)}"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
@@ -53,6 +53,7 @@ do_install() {
     install -m 0755 ${CARGO_BINDIR}/dstack-util ${D}${bindir}
     install -m 0755 ${CARGO_BINDIR}/dstack-guest-agent ${D}${bindir}
     install -m 0755 ${S}/basefiles/dstack-prepare.sh ${D}${bindir}
+    install -m 0755 ${S}/basefiles/ephemeral-docker.sh ${D}${bindir}
     install -m 0755 ${S}/basefiles/wg-checker.sh ${D}${bindir}
     install -m 0755 ${S}/basefiles/app-compose.sh ${D}${bindir}
     install -m 0644 ${S}/basefiles/journald.conf ${D}${sysconfdir}/systemd/journald.conf.d/dstack.conf
@@ -86,3 +87,7 @@ FILES:${PN} += " \
     ${sysconfdir}/systemd/system/docker.service.d/dstack-prepare.conf \
     ${sysconfdir}/systemd/system/containerd.service.d/dstack-prepare.conf \
 "
+
+# Cargo embeds build paths into binaries; allow TMPDIR references.
+INSANE_SKIP:${PN} += "buildpaths"
+INSANE_SKIP:${PN}-dbg += "buildpaths"
