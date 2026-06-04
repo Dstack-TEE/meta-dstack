@@ -76,12 +76,6 @@ echo "Loading verity env from ${VERITY_ENV_FILE}"
 # shellcheck source=/dev/null
 source "${VERITY_ENV_FILE}"
 
-# Bare-metal partitioning needs sgdisk (gdisk)
-if ! command -v sgdisk >/dev/null 2>&1; then
-    echo "Error: sgdisk not found; install 'gdisk' to build the partitioned rootfs." >&2
-    exit 1
-fi
-
 DSTACK_VERSION=$(bitbake-getvar --value DISTRO_VERSION | tail -1)
 
 # Output directory contains all artifacts; tarballs contain subsets
@@ -241,8 +235,9 @@ $Q cp $KERNEL_IMAGE ${OUTPUT_DIR}/
 $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 
 echo "Creating partitioned rootfs image at ${OUTPUT_DIR}/rootfs.img.parted.verity"
+# Bare-metal partitioning needs sgdisk (from the 'gdisk' package).
 if ! command -v sgdisk >/dev/null; then
-    echo "Error: cannot create partitioned rootfs image because 'sgdisk' is missing (install 'gdisk', or set ENABLE_UKI_IMAGE=0 and adjust tooling)" >&2
+    echo "Error: cannot create partitioned rootfs image because 'sgdisk' is missing; install 'gdisk'." >&2
     exit 1
 fi
 create_partitioned_rootfs "$ROOTFS_IMAGE" "${OUTPUT_DIR}/rootfs.img.parted.verity"
