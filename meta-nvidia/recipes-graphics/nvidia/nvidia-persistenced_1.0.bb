@@ -5,6 +5,8 @@ SRC_URI += "\
     file://nvidia-persistenced.service \
 "
 
+S = "${UNPACKDIR}"
+
 inherit systemd
 
 SYSTEMD_PACKAGES = "${PN}"

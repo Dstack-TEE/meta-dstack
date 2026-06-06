@@ -6,6 +6,8 @@ SRC_URI = "\
     file://nvidia.conf \
 "
 
+S = "${UNPACKDIR}"
+
 do_install() {
     install -d ${D}${sysconfdir}/modprobe.d
     install -m 0644 ${UNPACKDIR}/nvidia.conf ${D}${sysconfdir}/modprobe.d/

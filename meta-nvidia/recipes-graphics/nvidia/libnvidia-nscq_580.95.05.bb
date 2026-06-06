@@ -8,7 +8,7 @@ SRC_URI = "https://developer.download.nvidia.cn/compute/nvidia-driver/redist/lib
 SRC_URI[md5sum] = "6bc20061ebdae98fadd7a76110b44430"
 SRC_URI[sha256sum] = "c2285c12f10ec2afc0ad2949f7fcc282b6fd37f32165c1df241451ccabb1067a"
 
-S = "${WORKDIR}/libnvidia_nscq-linux-x86_64-${PV}-archive"
+S = "${UNPACKDIR}/libnvidia_nscq-linux-x86_64-${PV}-archive"
 
 INSANE_SKIP:${PN} = "already-stripped ldflags"
 

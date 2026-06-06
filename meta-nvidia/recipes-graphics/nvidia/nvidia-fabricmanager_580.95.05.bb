@@ -8,7 +8,7 @@ SRC_URI = "https://developer.download.nvidia.com/compute/nvidia-driver/redist/fa
 SRC_URI[md5sum] = "a6568aa288cb4784b85ba6826463f918"
 SRC_URI[sha256sum] = "f0220bfb67d04b4107acf00cc95abe5a9268fd8f8b5bae26971f4df232e4369c"
 
-S = "${WORKDIR}/fabricmanager-linux-x86_64-${PV}-archive"
+S = "${UNPACKDIR}/fabricmanager-linux-x86_64-${PV}-archive"
 
 DEPENDS = ""
 RDEPENDS:${PN} = "bash zlib"

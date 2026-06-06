@@ -1,5 +1,5 @@
 require libnvidia-container.inc
-inherit features_check
+inherit features_check pkgconfig
 
 SUMMARY = "libNVIDIA Container for Yocto"
 
@@ -20,7 +20,7 @@ PACKAGECONFIG[seccomp] = "WITH_SECCOMP=yes,WITH_SECCOMP=no,libseccomp"
 
 # We need to link with libelf, otherwise we need to
 # include bmake-native which does not exist at the moment.
-EXTRA_OEMAKE = "EXCLUDE_BUILD_FLAGS=1 PLATFORM=${HOST_ARCH} WITH_NVCGO=yes WITH_LIBELF=yes WITH_SECCOMP=yes COMPILER=${@d.getVar('CC').split()[0]} REVISION=${SRCREV_libnvidia} ${PACKAGECONFIG_CONFARGS} \
+EXTRA_OEMAKE = "EXCLUDE_BUILD_FLAGS=1 PLATFORM=${HOST_ARCH} WITH_NVCGO=yes WITH_LIBELF=yes COMPILER=${@d.getVar('CC').split()[0]} REVISION=${SRCREV_libnvidia} ${PACKAGECONFIG_CONFARGS} \
                 NVIDIA_MODPROBE_EXTRA_CFLAGS=${NVIDIA_MODPROBE_EXTRA_CFLAGS} \
                 GOCACHE=${WORKDIR}/go-cache GOPATH=${WORKDIR}/go GOMODCACHE=${WORKDIR}/go-mod"
 NVIDIA_MODPROBE_EXTRA_CFLAGS ?= "-ffile-prefix-map=${WORKDIR}=/usr/src/debug/${PN}/${EXTENDPE}${PV}-${PR}"
