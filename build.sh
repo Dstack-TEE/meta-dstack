@@ -328,8 +328,8 @@ download_image() {
 }
 
 usage() {
-    cat <<'EOF'
-Usage: ./build.sh <action> [args]
+    cat <<EOF
+Usage: ${0##*/} <action> [args]
 
 Actions:
   host     - Build host binaries only
