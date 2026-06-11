@@ -327,6 +327,33 @@ download_image() {
     fi
 }
 
+usage() {
+    cat <<'EOF'
+Usage: ./build.sh <action> [args]
+
+Actions:
+  host     - Build host binaries only
+  guest    - Build guest images only
+  cfg      - Generate configuration files only
+  dl       - Download a specific image
+  hostcfg  - Build host binaries and generate configuration files
+  all      - Build everything (host, guest, and configuration)
+  help     - Show this help
+
+Build a specific guest flavor (default builds all four): set the FLAVORS env var.
+  flavor      -> output image
+  prod        -> dstack
+  dev         -> dstack-dev
+  nvidia      -> dstack-nvidia
+  nvidia-dev  -> dstack-nvidia-dev
+
+  Examples:
+    FLAVORS=nvidia ./build.sh guest          # build only dstack-nvidia
+    FLAVORS="prod nvidia" ./build.sh guest   # build two flavors
+    ./build.sh guest                         # build all flavors (default)
+EOF
+}
+
 case $ACTION in
 host)
     build_host
@@ -352,15 +379,12 @@ all)
     build_guest
     build_cfg
     ;;
+help|-h|--help)
+    usage
+    ;;
 *)
-    echo "Invalid action: $ACTION"
-    echo "Valid actions are:"
-    echo "  host     - Build host binaries only"
-    echo "  guest    - Build guest images only"
-    echo "  cfg      - Generate configuration files only"
-    echo "  dl       - Download a specific image"
-    echo "  hostcfg  - Build host binaries and generate configuration files"
-    echo "  all      - Build everything (host, guest, and configuration)"
+    [ -n "$ACTION" ] && echo "Invalid action: $ACTION" >&2
+    usage
     exit 1
     ;;
 esac
