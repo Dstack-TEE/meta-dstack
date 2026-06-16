@@ -49,6 +49,12 @@ KERNEL_FEATURES:append:dstack = " features/scsi/disk.scc \
                                   disk-encryption.scc \
                                   dstack-tdx.scc"
 
+# disk-encryption.scc (above, from meta-confidential-compute) ships dm-crypt
+# for the encrypted data volume but explicitly turns CONFIG_DM_VERITY off. The
+# dstack rootfs is dm-verity, so re-enable it here -- this is the last dm-verity
+# fragment in KERNEL_FEATURES for the dstack machine, so it wins the merge.
+KERNEL_FEATURES:append:dstack = " ${@bb.utils.contains("DISTRO_FEATURES", "dm-verity", " features/device-mapper/dm-verity.scc", "", d)}"
+
 # Enable BTF
 KERNEL_DEBUG = "True"
 
