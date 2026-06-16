@@ -14,8 +14,9 @@ SRC_URI += "file://dstack-docker.cfg \
 # TDX guests need DMA_DIRECT_REMAP for shared (decrypted) coherent DMA so
 # devices like NVMe can complete I/O. INTEL_TDX_GUEST does not select it
 # upstream (and the symbol is promptless, so a .cfg fragment cannot set it),
-# hence this Kconfig patch. Scoped to tdx machines only.
-SRC_URI:append:tdx = " file://0001-x86-tdx-select-dma-direct-remap.patch"
+# hence this Kconfig patch. Only touches the INTEL_TDX_GUEST Kconfig, so it is
+# a no-op on AMD; scoped to the dstack confidential-guest machine.
+SRC_URI:append:dstack = " file://0001-x86-tdx-select-dma-direct-remap.patch"
 
 KERNEL_FEATURES:append = " features/cgroups/cgroups.scc \
                           features/overlayfs/overlayfs.scc \
@@ -29,7 +30,24 @@ KERNEL_FEATURES:append = " features/cgroups/cgroups.scc \
 
 KERNEL_FEATURES:append = " ${@bb.utils.contains("DISTRO_FEATURES", "dm-verity", " features/device-mapper/dm-verity.scc", "" ,d)}"
 
-KERNEL_FEATURES:append:tdx = " dstack-tdx.scc"
+# Unified dstack confidential-guest machine. A single kernel image that boots
+# on both Intel TDX and AMD SEV-SNP hosts (the kernel detects the platform at
+# runtime). The base guest features and the tdx.scc / sev-snp.scc kconf
+# fragments are reused from meta-confidential-compute; enabling both TDX and
+# SEV here is what makes one image work on either platform.
+KMACHINE:dstack ?= "common-pc-64"
+COMPATIBLE_MACHINE:dstack = "dstack"
+KERNEL_FEATURES:append:dstack = " features/scsi/disk.scc \
+                                  cfg/virtio.scc \
+                                  cfg/paravirt_kvm.scc \
+                                  cfg/fs/ext4.scc \
+                                  tdx.scc \
+                                  sev-snp.scc \
+                                  tpm2.scc \
+                                  hyperv.scc \
+                                  security-mitigations.scc \
+                                  disk-encryption.scc \
+                                  dstack-tdx.scc"
 
 # Enable BTF
 KERNEL_DEBUG = "True"
