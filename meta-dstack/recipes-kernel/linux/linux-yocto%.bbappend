@@ -17,6 +17,16 @@ SRC_URI += "file://dstack-docker.cfg \
 # hence this Kconfig patch. Scoped to tdx machines only.
 SRC_URI:append:tdx = " file://0001-x86-tdx-select-dma-direct-remap.patch"
 
+# Confidential guests are exposed to malicious ACPI tables supplied by the
+# host: crafted AML can read/write the guest's encrypted (private) memory
+# through the SystemMemory operation region handler. This "BadAML sandbox"
+# walks the page tables and denies AML SystemMemory accesses that target
+# encrypted pages, logging each decision. Ported from the Easy-TEE project.
+# Applied unconditionally: dstack OS always runs inside a TEE, so every
+# build needs this hardening (the hook is a runtime no-op when the platform
+# reports no memory encryption).
+SRC_URI:append = " file://0002-acpi-sandbox-block-aml-systemmemory-ram-access.patch"
+
 KERNEL_FEATURES:append = " features/cgroups/cgroups.scc \
                           features/overlayfs/overlayfs.scc \
                           features/netfilter/netfilter.scc \
