@@ -300,6 +300,28 @@ sha256sum ovmf.fd bzImage initramfs.cpio.gz metadata.json > sha256sum.txt
 sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
 popd
 
+# digest.sev.txt: the AMD SEV-SNP os_image_hash. Unlike the TDX digest.txt
+# (a content hash that includes the TDX firmware), this is computed by
+# dstack-vmm from the SEV firmware (ovmf-sev.fd) + kernel/initrd/cmdline/rootfs
+# and matches the os_image_hash the KMS verifier derives from a launch
+# measurement. Only emitted when the SEV firmware shipped and the tool exists.
+HAVE_DIGEST_SEV=0
+if [ "$HAVE_OVMF_SEV" = "1" ]; then
+    if [ -z "${DSTACK_VMM_BIN:-}" ]; then
+        for c in "$SCRIPT_DIR/dstack-vmm" "$SCRIPT_DIR/rust-target/release/dstack-vmm" \
+                 "$SCRIPT_DIR/dstack/target/release/dstack-vmm"; do
+            [ -x "$c" ] && DSTACK_VMM_BIN="$c" && break
+        done
+    fi
+    if [ -n "${DSTACK_VMM_BIN:-}" ] && [ -x "${DSTACK_VMM_BIN}" ]; then
+        echo "Generating digest.sev.txt via ${DSTACK_VMM_BIN}"
+        "${DSTACK_VMM_BIN}" sev-os-image-hash "${OUTPUT_DIR}" > "${OUTPUT_DIR}/digest.sev.txt"
+        HAVE_DIGEST_SEV=1
+    else
+        echo "Warning: dstack-vmm not found; skipping digest.sev.txt (set DSTACK_VMM_BIN)" >&2
+    fi
+fi
+
 # Create UKI artifacts (disk.raw and auth_hash.txt) in OUTPUT_DIR
 UKI_CREATED=0
 if [ "$ENABLE_UKI_IMAGE" = "1" ]; then
@@ -330,6 +352,9 @@ if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json"
     if [ "$HAVE_OVMF_SEV" = "1" ]; then
         BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd"
+    fi
+    if [ "$HAVE_DIGEST_SEV" = "1" ]; then
+        BARE_METAL_FILES="$BARE_METAL_FILES digest.sev.txt"
     fi
     (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR} $(for f in $BARE_METAL_FILES; do echo "$TAR_DIR_NAME/$f"; done))
     echo
