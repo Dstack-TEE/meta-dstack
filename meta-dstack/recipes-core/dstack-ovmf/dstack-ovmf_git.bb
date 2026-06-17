@@ -25,6 +25,7 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
            file://0003-Debug-prefix-map.patch \
            file://0004-Reproduciable.patch \
            file://0005-UefiCpuPkg-CpuExceptionHandlerLib-fix-push-instructi.patch \
+           file://0006-OvmfPkg-AmdSev-drop-embedded-grub.patch \
            "
 
 # Pinned to edk2-stable202502 (Feb 2025) instead of the latest stable202505.
@@ -77,6 +78,16 @@ PARALLEL_MAKE = ""
 
 
 DEPENDS = "nasm-native acpica-native ovmf-native util-linux-native"
+
+# Build the AMD SEV firmware in addition to the Intel TDX one. The TDX build
+# (IntelTdxX64.dsc) and its carefully pinned measurement layout are left byte
+# for byte unchanged; this only adds a separate ovmf-sev.fd artifact. The
+# AmdSevX64 embedded grub (sevsecret LUKS boot) is removed via
+# 0006-OvmfPkg-AmdSev-drop-embedded-grub.patch -- dstack boots a UKI, not
+# grub, and that grub cannot be built here anyway (OE has no x86_64-efi grub
+# modules / no sevsecret). The patch fails loud if a future edk2 bump changes
+# the AmdSev layout.
+OVMF_BUILD_SEV ??= "1"
 
 EDK_TOOLS_DIR="edk2_basetools"
 
@@ -241,6 +252,18 @@ do_compile:class-target() {
         ln ${build_dir}/FV/OVMF_CODE.fd ${WORKDIR}/ovmf/ovmf.secboot.code.fd
         ln ${build_dir}/${OVMF_ARCH}/EnrollDefaultKeys.efi ${WORKDIR}/ovmf/
     fi
+
+    if [ "${OVMF_BUILD_SEV}" = "1" ]; then
+        # AMD SEV / SEV-SNP firmware. Additive: produces a single combined
+        # firmware blob (used via QEMU -bios) at ovmf-sev.fd, leaving the TDX
+        # build above untouched. The embedded grub is stripped below, so
+        # there is no PREBUILD / grub toolchain dependency.
+        bbnote "Building AMD SEV firmware (AmdSevX64.dsc)."
+        sev_build_dir="${S}/Build/AmdSev/RELEASE_${FIXED_GCCVER}"
+        rm -rf ${S}/Build/AmdSev
+        ${S}/OvmfPkg/build.sh -p ${S}/OvmfPkg/AmdSev/AmdSevX64.dsc $PARALLEL_JOBS -a $OVMF_ARCH -b RELEASE -t ${FIXED_GCCVER} ${PACKAGECONFIG_CONFARGS}
+        ln ${sev_build_dir}/FV/OVMF.fd ${WORKDIR}/ovmf/ovmf-sev.fd
+    fi
 }
 
 do_install:class-native() {
@@ -289,6 +312,12 @@ do_deploy:class-target() {
         cp ${WORKDIR}/ovmf/$i.fd ${DEPLOYDIR}/
         qemu-img convert -f raw -O qcow2 ${WORKDIR}/ovmf/$i.fd ${DEPLOYDIR}/$i.qcow2
     done
+
+    # AMD SEV firmware (single combined blob for QEMU -bios).
+    if [ "${OVMF_BUILD_SEV}" = "1" ] && [ -f ${WORKDIR}/ovmf/ovmf-sev.fd ]; then
+        cp ${WORKDIR}/ovmf/ovmf-sev.fd ${DEPLOYDIR}/
+        qemu-img convert -f raw -O qcow2 ${WORKDIR}/ovmf/ovmf-sev.fd ${DEPLOYDIR}/ovmf-sev.qcow2
+    fi
 
     if ${@bb.utils.contains('PACKAGECONFIG', 'secureboot', 'true', 'false', d)}; then
         # Create a test Platform Key and first Key Exchange Key to use with EnrollDefaultKeys

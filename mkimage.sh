@@ -237,6 +237,17 @@ $Q cp $INITRAMFS_IMAGE ${OUTPUT_DIR}/initramfs.cpio.gz
 $Q cp $KERNEL_IMAGE ${OUTPUT_DIR}/
 $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 
+# AMD SEV firmware (additive). Shipped alongside the TDX firmware so a SEV-SNP
+# launch can select it, but deliberately kept OUT of the image digest below:
+# sha256sum.txt / digest.txt / metadata.json stay TDX-only so the measured
+# image is byte-for-byte unchanged. SEV measurement is a separate concern.
+OVMF_SEV_FIRMWARE=${COMMON_IMG_DIR}/ovmf-sev.fd
+HAVE_OVMF_SEV=0
+if [ -f "$OVMF_SEV_FIRMWARE" ]; then
+    $Q cp $OVMF_SEV_FIRMWARE ${OUTPUT_DIR}/
+    HAVE_OVMF_SEV=1
+fi
+
 echo "Creating partitioned rootfs image at ${OUTPUT_DIR}/rootfs.img.parted.verity"
 # Bare-metal partitioning needs sgdisk (from the 'gdisk' package).
 if ! command -v sgdisk >/dev/null; then
@@ -311,6 +322,9 @@ if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     rm -rf ${IMAGE_TAR}
     echo "Archiving bare metal image to ${IMAGE_TAR}"
     BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json"
+    if [ "$HAVE_OVMF_SEV" = "1" ]; then
+        BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd"
+    fi
     (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR} $(for f in $BARE_METAL_FILES; do echo "$TAR_DIR_NAME/$f"; done))
     echo
 
