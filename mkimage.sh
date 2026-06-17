@@ -238,14 +238,20 @@ $Q cp $KERNEL_IMAGE ${OUTPUT_DIR}/
 $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 
 # AMD SEV firmware (additive). Shipped alongside the TDX firmware so a SEV-SNP
-# launch can select it, but deliberately kept OUT of the image digest below:
-# sha256sum.txt / digest.txt / metadata.json stay TDX-only so the measured
-# image is byte-for-byte unchanged. SEV measurement is a separate concern.
+# launch can select it via the metadata.json "bios-sev" field below. The SEV
+# firmware blob itself is NOT added to sha256sum.txt, but metadata.json (which
+# references it) is, so digest.txt does reflect its presence. That does not
+# change any TDX hardware measurement (MRTD comes from ovmf.fd, RTMRs from
+# kernel/cmdline/rootfs) -- it only changes dstack's image-bundle digest.
 OVMF_SEV_FIRMWARE=${COMMON_IMG_DIR}/ovmf-sev.fd
 HAVE_OVMF_SEV=0
+BIOS_SEV_JSON=""
 if [ -f "$OVMF_SEV_FIRMWARE" ]; then
     $Q cp $OVMF_SEV_FIRMWARE ${OUTPUT_DIR}/
     HAVE_OVMF_SEV=1
+    # Inserted after the "bios" line in metadata.json (see below).
+    BIOS_SEV_JSON='
+    "bios-sev": "ovmf-sev.fd",'
 fi
 
 echo "Creating partitioned rootfs image at ${OUTPUT_DIR}/rootfs.img.parted.verity"
@@ -275,7 +281,7 @@ KARG2="dstack.rootfs_hash=$ROOT_HASH dstack.rootfs_size=$DATA_SIZE"
 
 cat <<EOF > ${OUTPUT_DIR}/metadata.json
 {
-    "bios": "ovmf.fd",
+    "bios": "ovmf.fd",${BIOS_SEV_JSON}
     "kernel": "bzImage",
     "cmdline": "$KARG0 $KARG1 $KARG2",
     "initrd": "initramfs.cpio.gz",
