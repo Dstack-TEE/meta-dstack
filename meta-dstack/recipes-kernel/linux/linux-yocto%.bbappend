@@ -36,7 +36,7 @@ KERNEL_FEATURES:append = " ${@bb.utils.contains("DISTRO_FEATURES", "dm-verity", 
 # fragments are reused from meta-confidential-compute; enabling both TDX and
 # SEV here is what makes one image work on either platform.
 KMACHINE:dstack ?= "common-pc-64"
-COMPATIBLE_MACHINE:dstack = "dstack"
+COMPATIBLE_MACHINE:dstack = "^dstack$"
 KERNEL_FEATURES:append:dstack = " features/scsi/disk.scc \
                                   cfg/virtio.scc \
                                   cfg/paravirt_kvm.scc \
