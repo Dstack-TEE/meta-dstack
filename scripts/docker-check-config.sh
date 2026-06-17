@@ -17,7 +17,7 @@ possibleConfigs="
 if [ $# -gt 0 ]; then
 	CONFIG="$1"
 else
-	: "${CONFIG:=$SCRIPT_DIR/../bb-build/tmp/deploy/images/tdx/kernel-config}"
+	: "${CONFIG:=$SCRIPT_DIR/../bb-build/tmp/deploy/images/${DSTACK_MACHINE:-dstack}/kernel-config}"
 fi
 
 if ! command -v zgrep > /dev/null 2>&1; then

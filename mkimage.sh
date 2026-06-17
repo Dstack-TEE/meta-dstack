@@ -50,9 +50,12 @@ fi
 BB_BUILD_DIR=$(realpath ${BB_BUILD_DIR:-build})
 DIST_DIR=$(realpath ${DIST_DIR:-${BB_BUILD_DIR}/dist})
 
+# MACHINE name; artifacts are deployed under deploy/images/${MACHINE}
+DSTACK_MACHINE=${DSTACK_MACHINE:-dstack}
+
 # Common artifacts are in tmp/, flavor-specific artifacts are in tmp-mc-<flavor>/
-COMMON_IMG_DIR=${BB_BUILD_DIR}/tmp/deploy/images/tdx
-FLAVOR_IMG_DIR=${BB_BUILD_DIR}/tmp-mc-${FLAVOR}/deploy/images/tdx
+COMMON_IMG_DIR=${BB_BUILD_DIR}/tmp/deploy/images/${DSTACK_MACHINE}
+FLAVOR_IMG_DIR=${BB_BUILD_DIR}/tmp-mc-${FLAVOR}/deploy/images/${DSTACK_MACHINE}
 
 # Common artifacts (shared across all flavors)
 INITRAMFS_IMAGE=${COMMON_IMG_DIR}/dstack-initramfs.cpio.gz
@@ -60,13 +63,13 @@ KERNEL_IMAGE=${COMMON_IMG_DIR}/bzImage
 OVMF_FIRMWARE=${COMMON_IMG_DIR}/ovmf.fd
 
 # Flavor-specific artifacts (from multiconfig build)
-ROOTFS_IMAGE=${FLAVOR_IMG_DIR}/dstack-rootfs-tdx.squashfs.verity
+ROOTFS_IMAGE=${FLAVOR_IMG_DIR}/dstack-rootfs-${DSTACK_MACHINE}.squashfs.verity
 
 # UKI filename
 UKI_IMAGE=${FLAVOR_IMG_DIR}/dstack-uki.efi
 
 # Verity env is in the flavor-specific work-shared directory
-VERITY_ENV_FILE=${BB_BUILD_DIR}/tmp-mc-${FLAVOR}/work-shared/tdx/dm-verity/dstack-rootfs.squashfs.verity.env
+VERITY_ENV_FILE=${BB_BUILD_DIR}/tmp-mc-${FLAVOR}/work-shared/${DSTACK_MACHINE}/dm-verity/dstack-rootfs.squashfs.verity.env
 if [ ! -f "${VERITY_ENV_FILE}" ]; then
     echo "Error: verity env not found: ${VERITY_ENV_FILE}" >&2
     echo "Build the rootfs first, e.g.: bitbake mc:${FLAVOR}:dstack-rootfs" >&2

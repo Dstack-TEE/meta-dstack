@@ -15,7 +15,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 IMAGE_NAME=${IMAGE_NAME:-dstack-rootfs}
-ROOTFS_PATH=tmp/work/tdx-poky-linux/${IMAGE_NAME}/1.0/rootfs
+ROOTFS_PATH=tmp/work/${DSTACK_MACHINE:-dstack}-poky-linux/${IMAGE_NAME}/1.0/rootfs
 BUILD_DIR_A=${1:-${THIS_DIR}/build-a}
 BUILD_DIR_B=${2:-${THIS_DIR}/build-b}
 BB_DIR_A=${BB_DIR_A:-${BUILD_DIR_A}/bb-build}
