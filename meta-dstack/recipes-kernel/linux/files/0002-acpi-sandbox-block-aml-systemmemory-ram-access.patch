@@ -9,18 +9,18 @@ or writes confidential guest memory via the SystemMemory operation
 region handler; this sandbox walks the page tables and denies the access
 when the target page is encrypted, logging the decision.
 
+On a platform without memory encryption the sandbox is a no-op: every
+access is treated as unencrypted and allowed. Only denied accesses are
+logged unconditionally; allowed accesses use ACPI debug-level output to
+avoid flooding the log.
+
 Ported from the Easy-TEE project (mkosi gcp profile kernel patch).
 
 Upstream-Status: Inappropriate [confidential-guest hardening]
 Signed-off-by: Paul Meyer <katexochen0@gmail.com>
 ---
- drivers/acpi/acpica/exregion.c |   6 ++
- drivers/acpi/acpica/sandbox.h  | 139 +++++++++++++++++++++++++++++++++
- 2 files changed, 145 insertions(+)
- create mode 100644 drivers/acpi/acpica/sandbox.h
-
 diff --git a/drivers/acpi/acpica/exregion.c b/drivers/acpi/acpica/exregion.c
-index a390a1c2b0abb01a7c8490b207ec377818120207..638323389e970500c004b7ccdd52a9e7455eaf67 100644
+index a390a1c..6383233 100644
 --- a/drivers/acpi/acpica/exregion.c
 +++ b/drivers/acpi/acpica/exregion.c
 @@ -14,6 +14,8 @@
@@ -40,7 +40,7 @@ index a390a1c2b0abb01a7c8490b207ec377818120207..638323389e970500c004b7ccdd52a9e7
  	acpi_status status = AE_OK;
  	void *logical_addr_ptr = NULL;
  	struct acpi_mem_space_context *mem_info = region_context;
-@@ -192,6 +195,7 @@ acpi_ex_system_memory_space_handler(u32 function,
+@@ -192,6 +195,7 @@ access:
  	case ACPI_READ:
  
  		*value = 0;
@@ -48,7 +48,7 @@ index a390a1c2b0abb01a7c8490b207ec377818120207..638323389e970500c004b7ccdd52a9e7
  		switch (bit_width) {
  		case 8:
  
-@@ -223,6 +227,7 @@ acpi_ex_system_memory_space_handler(u32 function,
+@@ -223,6 +227,7 @@ access:
  
  	case ACPI_WRITE:
  
@@ -56,7 +56,7 @@ index a390a1c2b0abb01a7c8490b207ec377818120207..638323389e970500c004b7ccdd52a9e7
  		switch (bit_width) {
  		case 8:
  
-@@ -258,6 +263,7 @@ acpi_ex_system_memory_space_handler(u32 function,
+@@ -258,6 +263,7 @@ access:
  		break;
  	}
  
@@ -66,10 +66,10 @@ index a390a1c2b0abb01a7c8490b207ec377818120207..638323389e970500c004b7ccdd52a9e7
  
 diff --git a/drivers/acpi/acpica/sandbox.h b/drivers/acpi/acpica/sandbox.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..1d9d95a87698dde14429f2f33a0c375ad51774fe
+index 0000000..34d09ca
 --- /dev/null
 +++ b/drivers/acpi/acpica/sandbox.h
-@@ -0,0 +1,139 @@
+@@ -0,0 +1,154 @@
 +/* SPDX-License-Identifier: BSD-3-Clause OR GPL-2.0 */
 +/* SPDX-FileCopyrightText: Satoru Takekoshi, Manami Mori, Takaaki Fukai,
 + * Takahiro Shinagawa */
@@ -170,11 +170,14 @@ index 0000000000000000000000000000000000000000..1d9d95a87698dde14429f2f33a0c375a
 +
 +	cond_resched();
 +
-+	bool encrypted = true;
++	/*
++	 * On a platform without memory encryption there is no private guest
++	 * memory to protect, so the sandbox is a no-op: treat every access as
++	 * unencrypted and allow it. Only confidential guests gate accesses.
++	 */
++	bool encrypted = false;
 +	if (cc_platform_has(CC_ATTR_MEM_ENCRYPT)) {
 +		encrypted = __sandbox_is_encrypted_generic(virt_addr);
-+	} else {
-+		ACPI_ERROR((AE_INFO, "SANDBOX: Unknown platform"));
 +	}
 +
 +	cond_resched();
@@ -199,15 +202,25 @@ index 0000000000000000000000000000000000000000..1d9d95a87698dde14429f2f33a0c375a
 +{
 +	cond_resched();
 +
-+	ACPI_INFO((
-+		"SANDBOX: ACCESS %s virt=%lx phys=%lx %s",
-+		__sandbox_access_log.is_read ? "r" : "w",
-+		(unsigned long)__sandbox_access_log.virt_addr,
-+		(unsigned long)__sandbox_access_log.phys_addr,
-+		__sandbox_access_log.access_allowed ? "allowed" : "denied"
-+	));
++	/*
++	 * AML SystemMemory accesses can be frequent, so only the (rare) denied
++	 * accesses are logged unconditionally; allowed accesses go to ACPI
++	 * debug-level output to avoid flooding the log on every boot/runtime
++	 * access while preserving observability when debugging.
++	 */
++	if (!__sandbox_access_log.access_allowed) {
++		ACPI_ERROR((AE_INFO,
++			"SANDBOX: DENIED %s virt=%lx phys=%lx",
++			__sandbox_access_log.is_read ? "r" : "w",
++			(unsigned long)__sandbox_access_log.virt_addr,
++			(unsigned long)__sandbox_access_log.phys_addr));
++	} else {
++		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
++			"SANDBOX: ALLOWED %s virt=%lx phys=%lx\n",
++			__sandbox_access_log.is_read ? "r" : "w",
++			(unsigned long)__sandbox_access_log.virt_addr,
++			(unsigned long)__sandbox_access_log.phys_addr));
++	}
 +
 +	cond_resched();
 +}
--- 
-2.49.0
