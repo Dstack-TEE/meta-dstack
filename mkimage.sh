@@ -301,25 +301,28 @@ sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
 popd
 
 # digest.sev.txt: the AMD SEV-SNP os_image_hash. Unlike the TDX digest.txt
-# (a content hash that includes the TDX firmware), this is computed by
-# dstack-vmm from the SEV firmware (ovmf-sev.fd) + kernel/initrd/cmdline/rootfs
-# and matches the os_image_hash the KMS verifier derives from a launch
-# measurement. Only emitted when the SEV firmware shipped and the tool exists.
+# (a content hash that includes the TDX firmware), this is computed by the
+# `dstack-mr` tool from the SEV firmware (ovmf-sev.fd) + kernel/initrd/cmdline/
+# rootfs and matches the os_image_hash the KMS verifier derives from a launch
+# measurement. The VMM reads this file at deploy time instead of recomputing it,
+# so it is required (not best-effort): if `dstack-mr` is not prebuilt, build it.
 HAVE_DIGEST_SEV=0
 if [ "$HAVE_OVMF_SEV" = "1" ]; then
-    if [ -z "${DSTACK_VMM_BIN:-}" ]; then
-        for c in "$SCRIPT_DIR/dstack-vmm" "$SCRIPT_DIR/rust-target/release/dstack-vmm" \
-                 "$SCRIPT_DIR/dstack/target/release/dstack-vmm"; do
-            [ -x "$c" ] && DSTACK_VMM_BIN="$c" && break
+    DSTACK_SRC="${DSTACK_SRC:-$SCRIPT_DIR/dstack}"
+    if [ -z "${DSTACK_MR_BIN:-}" ]; then
+        for c in "$SCRIPT_DIR/dstack-mr" "$SCRIPT_DIR/rust-target/release/dstack-mr" \
+                 "$DSTACK_SRC/target/release/dstack-mr"; do
+            [ -x "$c" ] && DSTACK_MR_BIN="$c" && break
         done
     fi
-    if [ -n "${DSTACK_VMM_BIN:-}" ] && [ -x "${DSTACK_VMM_BIN}" ]; then
-        echo "Generating digest.sev.txt via ${DSTACK_VMM_BIN}"
-        "${DSTACK_VMM_BIN}" sev-os-image-hash "${OUTPUT_DIR}" > "${OUTPUT_DIR}/digest.sev.txt"
-        HAVE_DIGEST_SEV=1
-    else
-        echo "Warning: dstack-vmm not found; skipping digest.sev.txt (set DSTACK_VMM_BIN)" >&2
+    if [ -z "${DSTACK_MR_BIN:-}" ]; then
+        echo "Building dstack-mr to compute digest.sev.txt"
+        ( cd "$DSTACK_SRC" && cargo build --release -p dstack-mr )
+        DSTACK_MR_BIN="$DSTACK_SRC/target/release/dstack-mr"
     fi
+    echo "Generating digest.sev.txt via ${DSTACK_MR_BIN}"
+    "${DSTACK_MR_BIN}" sev-os-image-hash "${OUTPUT_DIR}" > "${OUTPUT_DIR}/digest.sev.txt"
+    HAVE_DIGEST_SEV=1
 fi
 
 # Create UKI artifacts (disk.raw and auth_hash.txt) in OUTPUT_DIR
