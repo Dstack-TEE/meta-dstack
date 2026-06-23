@@ -5,7 +5,7 @@ set -euo pipefail
 # Function to display usage
 usage() {
     echo "Usage: $0 <url_or_local_file>"
-    echo "Example: $0 https://github.com/nearai/private-ml-sdk/releases/download/v0.5.3.1/dstack-nvidia-0.5.3.1.tar.gz"
+    echo "Example: $0 https://github.com/Dstack-TEE/meta-dstack/releases/download/v0.6.0/dstack-0.6.0.tar.gz"
     echo "Example: $0 /path/to/local/file.tar.gz"
     exit 1
 }

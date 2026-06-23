@@ -340,17 +340,15 @@ Actions:
   all      - Build everything (host, guest, and configuration)
   help     - Show this help
 
-Build a specific guest flavor (default builds all four): set the FLAVORS env var.
+Build a specific guest flavor (default builds production): set the FLAVORS env var.
   flavor      -> output image
   prod        -> dstack
   dev         -> dstack-dev
-  nvidia      -> dstack-nvidia
-  nvidia-dev  -> dstack-nvidia-dev
 
   Examples:
-    FLAVORS=nvidia ./build.sh guest          # build only dstack-nvidia
-    FLAVORS="prod nvidia" ./build.sh guest   # build two flavors
-    ./build.sh guest                         # build all flavors (default)
+    ./build.sh guest                     # build dstack (default)
+    FLAVORS=dev ./build.sh guest         # build only dstack-dev
+    FLAVORS="prod dev" ./build.sh guest  # build both flavors
 EOF
 }
 

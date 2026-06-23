@@ -9,7 +9,10 @@ NVIDIA_GROUP = "acpid \
     kernel-module-video \
     numactl \
 "
-KERNEL_MODULE_AUTOLOAD:append = " nvidia nvidia-drm nvidia-modeset nvidia-uvm video"
+# Do not autoload NVIDIA modules on every boot. The default image also runs on
+# GPU-less hosts, so GPU services load these modules only after hardware
+# detection succeeds.
+KERNEL_MODULE_AUTOLOAD:append = " video"
 IMAGE_INSTALL:append = " ${NVIDIA_GROUP}"
 
 DOCKER_DAEMON_JSON = "${THISDIR}/files/docker-daemon-nvidia.json"

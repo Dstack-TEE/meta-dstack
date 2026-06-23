@@ -4,6 +4,10 @@ set -e
 usage() {
     echo "Usage: $0 [-n]"
     echo "  -n: Don't check reproducibility"
+    echo ""
+    echo "Environment:"
+    echo "  RELEASE_FLAVORS: space-separated flavors to build (default: prod)"
+    echo "                  e.g. RELEASE_FLAVORS=\"prod dev\" $0"
 }
 
 NO_CHECK=0
@@ -51,8 +55,8 @@ build_to() {
         $BUILDER_NAME bash -e -c "$BUILD_CMD"
 }
 
-# Only build production flavors (no dev) for reproducible builds
-RELEASE_FLAVORS="prod nvidia"
+# Build production by default; callers may override, e.g. RELEASE_FLAVORS="prod dev".
+RELEASE_FLAVORS="${RELEASE_FLAVORS:-prod}"
 
 build_to $HOST_BUILD_DIR_A "FLAVORS='$RELEASE_FLAVORS' DSTACK_TAR_RELEASE=1"
 
@@ -79,7 +83,7 @@ git clone https://github.com/Phala-Network/meta-dstack-cloud.git
 cd meta-dstack-cloud/
 git checkout $(git -C $THIS_DIR rev-parse HEAD)
 git submodule update --init --recursive
-cd repro-build && ./repro-build.sh -n
+cd repro-build && RELEASE_FLAVORS='${RELEASE_FLAVORS}' ./repro-build.sh -n
 EOF
 echo "==========================="
 

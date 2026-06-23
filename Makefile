@@ -9,11 +9,11 @@ DIST_DIR ?= ${BB_BUILD_DIR}/dist
 export BB_BUILD_DIR
 export DIST_DIR
 
-# Flavor names map to multiconfig names: prod, dev, nvidia, nvidia-dev
-FLAVORS ?= prod dev nvidia nvidia-dev
+# Flavor names map to multiconfig names: prod, dev
+FLAVORS ?= prod
 
 # Map flavor to dist name for mkimage.sh
-flavor_to_dist = $(if $(filter prod,$1),dstack,$(if $(filter dev,$1),dstack-dev,$(if $(filter nvidia,$1),dstack-nvidia,$(if $(filter nvidia-dev,$1),dstack-nvidia-dev,$1))))
+flavor_to_dist = $(if $(filter prod,$1),dstack,$(if $(filter dev,$1),dstack-dev,$1))
 
 all: dist
 
