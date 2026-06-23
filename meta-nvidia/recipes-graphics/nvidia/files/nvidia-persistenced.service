@@ -6,6 +6,9 @@ After=systemd-modules-load.service modprobe@.service
 
 [Service]
 Type=oneshot
+# Skip cleanly on instances without an NVIDIA GPU (exit 1 -> unit skipped, not
+# failed), so the NVIDIA image can run on GPU-less hosts.
+ExecCondition=/usr/bin/nvidia-gpu-detect gpu
 ExecStart=/usr/bin/env nvidia-persistenced --uvm-persistence-mode
 ExecStartPost=/usr/bin/nvidia-smi conf-compute -srs 1
 RemainAfterExit=yes
