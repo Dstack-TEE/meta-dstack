@@ -9,6 +9,12 @@ Type=oneshot
 # Skip cleanly on instances without an NVIDIA GPU (exit 1 -> unit skipped, not
 # failed), so the NVIDIA image can run on GPU-less hosts.
 ExecCondition=/usr/bin/nvidia-gpu-detect gpu
+# Load NVIDIA modules only after GPU detection succeeds to avoid boot-time
+# modprobe failures/noise on GPU-less hosts.
+ExecStartPre=/usr/bin/env modprobe nvidia
+ExecStartPre=/usr/bin/env modprobe nvidia-modeset
+ExecStartPre=/usr/bin/env modprobe nvidia-drm
+ExecStartPre=/usr/bin/env modprobe nvidia-uvm
 ExecStart=/usr/bin/env nvidia-persistenced --uvm-persistence-mode
 ExecStartPost=/usr/bin/nvidia-smi conf-compute -srs 1
 RemainAfterExit=yes

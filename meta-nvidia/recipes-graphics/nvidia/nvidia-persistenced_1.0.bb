@@ -9,7 +9,7 @@ S = "${UNPACKDIR}"
 
 inherit systemd
 
-RDEPENDS:${PN} += "nvidia-gpu-detect"
+RDEPENDS:${PN} += "nvidia-gpu-detect kmod"
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "nvidia-persistenced.service"

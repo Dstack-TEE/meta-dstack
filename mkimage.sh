@@ -36,16 +36,30 @@ if [ -z "$DIST_NAME" ]; then
 fi
 
 if [ -z "$FLAVOR" ]; then
-    echo "Error: --flavor is required (prod, dev, nvidia, nvidia-dev)"
+    echo "Error: --flavor is required (prod, dev)"
     exit 1
 fi
 
-
-if [[ "$DIST_NAME" == *-dev ]]; then
-    IS_DEV=true
-else
-    IS_DEV=false
-fi
+case "$FLAVOR" in
+    prod)
+        if [[ "$DIST_NAME" == *-dev ]]; then
+            echo "Error: prod flavor requires a non-dev dist name: $DIST_NAME" >&2
+            exit 1
+        fi
+        IS_DEV=false
+        ;;
+    dev)
+        if [[ "$DIST_NAME" != *-dev ]]; then
+            echo "Error: dev flavor requires a dist name ending in -dev: $DIST_NAME" >&2
+            exit 1
+        fi
+        IS_DEV=true
+        ;;
+    *)
+        echo "Error: unsupported --flavor '$FLAVOR' (expected prod or dev)" >&2
+        exit 1
+        ;;
+esac
 
 BB_BUILD_DIR=$(realpath ${BB_BUILD_DIR:-build})
 DIST_DIR=$(realpath ${DIST_DIR:-${BB_BUILD_DIR}/dist})
