@@ -9,6 +9,8 @@ S = "${UNPACKDIR}"
 
 inherit systemd
 
+RDEPENDS:${PN} += "nvidia-gpu-detect"
+
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "nvidia-persistenced.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"

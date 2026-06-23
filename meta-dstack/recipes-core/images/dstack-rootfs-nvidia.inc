@@ -1,6 +1,7 @@
 NVIDIA_GROUP = "acpid \
     nvidia \
     nvidia-firmware \
+    nvidia-gpu-detect \
     nvidia-persistenced \
     nvidia-fabricmanager \
     libnvidia-nscq \
