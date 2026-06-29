@@ -77,12 +77,12 @@ need the QEMU-derived `dstack-acpi-tables` helper in the KMS runtime:
 
 For legacy verification, `--kms-image-verify` pre-populates the local KMS image
 cache with aliases for `digest.txt` and `measurement.json` hashes. With
-`--kms-no-qemu`, the measurement path intentionally skips that cache
+`--kms-no-qemu`, the lite path intentionally skips that cache
 pre-population so KMS cannot rely on a downloaded image. It starts only the KMS
 process with a restricted `PATH` (`/usr/sbin:/usr/bin:/sbin:/bin`) and asks the
-VMM to launch app CVMs with `tdx_attestation_variant = "measurement"`.
+VMM to launch app CVMs with `tdx_attestation_variant = "lite"`.
 
-The no-image-download TDX measurement path supports app memory of exactly
+The no-image-download TDX lite path supports app memory of exactly
 2048 MiB or at least 2816 MiB. QEMU's patched kernel Authenticode hash is
 memory-dependent for other low-memory sizes, while exactly 2 GiB produces the
 same patched kernel bytes as the high-memory placement. Legacy TDX attestation

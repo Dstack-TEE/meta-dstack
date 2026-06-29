@@ -83,8 +83,8 @@ Options / env overrides:
   --no-app-gateway          Do not enable gateway in app-compose (useful with --no-tee)
   --tee-platform VALUE      VMM cvm.platform: auto|tdx|amd-sev-snp (default: auto)
   --kms-image-verify        Enable KMS OS image verification
-  --kms-no-qemu             Use TDX measurement vm_config mode and start KMS without dstack-acpi-tables in PATH
-  --tdx-attestation-variant legacy|measurement
+  --kms-no-qemu             Use TDX lite vm_config mode and start KMS without dstack-acpi-tables in PATH
+  --tdx-attestation-variant legacy|lite
                             TDX app attestation/hash scheme (default: legacy)
   --qemu PATH               QEMU binary path override
   --pccs-url URL            PCCS URL passed to VMM/KMS verification config
@@ -124,7 +124,7 @@ while [[ $# -gt 0 ]]; do
     --no-app-gateway) APP_GATEWAY=0; shift ;;
     --tee-platform) TEE_PLATFORM="$2"; shift 2 ;;
     --kms-image-verify) KMS_IMAGE_VERIFY=1; shift ;;
-    --kms-no-qemu) KMS_STRICT_NO_QEMU=1; TDX_ATTESTATION_VARIANT=measurement; shift ;;
+    --kms-no-qemu) KMS_STRICT_NO_QEMU=1; TDX_ATTESTATION_VARIANT=lite; shift ;;
     --tdx-attestation-variant) TDX_ATTESTATION_VARIANT="$2"; shift 2 ;;
     --qemu) QEMU_PATH=$(realpath -m "$2"); shift 2 ;;
     --pccs-url) PCCS_URL="$2"; shift 2 ;;
@@ -137,17 +137,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$TDX_ATTESTATION_VARIANT" in
-  legacy|measurement) ;;
-  *) fatal "invalid TDX attestation variant: $TDX_ATTESTATION_VARIANT (expected legacy|measurement)" ;;
+  legacy|lite) ;;
+  *) fatal "invalid TDX attestation variant: $TDX_ATTESTATION_VARIANT (expected legacy|lite)" ;;
 esac
-if [[ "$KMS_STRICT_NO_QEMU" == "1" && "$NO_TEE" != "1" && "$TDX_ATTESTATION_VARIANT" == "measurement" ]]; then
+if [[ "$KMS_STRICT_NO_QEMU" == "1" && "$NO_TEE" != "1" && "$TDX_ATTESTATION_VARIANT" == "lite" ]]; then
   # The no-image-download verifier uses the build-time QEMU-patched kernel
   # Authenticode hash. QEMU produces the same patched kernel at exactly 2 GiB
   # and at/above its high-memory initrd placement threshold
   # (0xB0000000 = 2816 MiB). Other low-memory sizes are memory-dependent.
   if (( APP_MEMORY != 2048 && APP_MEMORY < 2816 )); then
     if (( APP_MEMORY_EXPLICIT == 1 )); then
-      fatal "--kms-no-qemu requires --memory 2048 or --memory >= 2816 for TDX measurement verification without image download"
+      fatal "--kms-no-qemu requires --memory 2048 or --memory >= 2816 for TDX lite verification without image download"
     fi
     APP_MEMORY=2048
   fi
@@ -830,8 +830,8 @@ prepopulate_kms_image_cache() {
   if [[ "$KMS_IMAGE_VERIFY" != "1" ]]; then
     return 0
   fi
-  if [[ "$KMS_STRICT_NO_QEMU" == "1" && "$TDX_ATTESTATION_VARIANT" == "measurement" ]]; then
-    log "skipping KMS image cache pre-population for no-QEMU measurement verification"
+  if [[ "$KMS_STRICT_NO_QEMU" == "1" && "$TDX_ATTESTATION_VARIANT" == "lite" ]]; then
+    log "skipping KMS image cache pre-population for no-QEMU lite verification"
     return 0
   fi
   local src_dir="$IMAGE_DIR/$IMAGE_NAME"
