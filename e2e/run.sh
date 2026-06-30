@@ -842,26 +842,9 @@ prepopulate_kms_image_cache() {
   if [[ -s "$src_dir/digest.txt" ]]; then
     hashes+=("$(tr -d '[:space:]' <"$src_dir/digest.txt")")
   fi
-  if [[ -s "$src_dir/measurement.json" ]]; then
-    while IFS= read -r hash; do
-      [[ -n "$hash" ]] && hashes+=("$hash")
-    done < <(python3 - "$src_dir/measurement.json" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-doc = json.loads(Path(sys.argv[1]).read_text())
-for section in ("tdx", "snp"):
-    item = doc.get(section) or {}
-    value = item.get("h") or item.get("os_image_hash")
-    if value:
-        print(value)
-PY
-    )
-  fi
 
   if [[ ${#hashes[@]} -eq 0 ]]; then
-    fatal "KMS image verification requested, but no digest.txt/measurement.json hash found in $src_dir"
+    fatal "KMS image verification requested, but no digest.txt hash found in $src_dir"
   fi
 
   local hash dst count=0

@@ -274,7 +274,7 @@ $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 # AMD SEV firmware (additive). Shipped alongside the TDX firmware so a SEV-SNP
 # launch can select it via the metadata.json "bios-sev" field below. The SEV
 # firmware blob itself is NOT added to sha256sum.txt, but metadata.json
-# references it and measurement.json commits to the SNP launch inputs derived
+# references it and measurement.snp.cbor commits to the SNP launch inputs derived
 # from it, so digest.txt reflects its presence/content. That does not change any
 # TDX hardware measurement (MRTD comes from ovmf.fd, RTMRs from
 # kernel/cmdline/rootfs) -- it only changes dstack's image-bundle digest.
@@ -331,12 +331,17 @@ EOF
 
 ensure_dstack_mr_bin
 
-echo "Generating measurement.json via ${DSTACK_MR_BIN}"
-"${DSTACK_MR_BIN}" measure-os "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.json"
+echo "Generating split measurement CBOR via ${DSTACK_MR_BIN}"
+"${DSTACK_MR_BIN}" tdx-measurement-cbor "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.tdx.cbor"
+MEASUREMENT_FILES="measurement.tdx.cbor"
+if [ "$HAVE_OVMF_SEV" = "1" ]; then
+    "${DSTACK_MR_BIN}" snp-measurement-cbor "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.snp.cbor"
+    MEASUREMENT_FILES="$MEASUREMENT_FILES measurement.snp.cbor"
+fi
 
 echo "Generating image digest to ${OUTPUT_DIR}/"
 pushd ${OUTPUT_DIR}/
-sha256sum ovmf.fd bzImage initramfs.cpio.gz metadata.json measurement.json > sha256sum.txt
+sha256sum ovmf.fd bzImage initramfs.cpio.gz metadata.json $MEASUREMENT_FILES > sha256sum.txt
 sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
 popd
 
@@ -367,9 +372,9 @@ if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     # Bare metal tarball: all files except disk.raw and auth_hash.txt
     rm -rf ${IMAGE_TAR}
     echo "Archiving bare metal image to ${IMAGE_TAR}"
-    BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json measurement.json"
+    BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json measurement.tdx.cbor"
     if [ "$HAVE_OVMF_SEV" = "1" ]; then
-        BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd"
+        BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd measurement.snp.cbor"
     fi
     (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR} $(for f in $BARE_METAL_FILES; do echo "$TAR_DIR_NAME/$f"; done))
     echo
