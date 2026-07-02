@@ -28,7 +28,7 @@ inherit cargo_bin
 
 do_unpack() {
     mkdir -p ${S}
-    rsync -a --exclude="target" ${SRC_DIR}/ ${S}/
+    rsync -a --no-owner --no-group --exclude="target" ${SRC_DIR}/ ${S}/
 }
 
 # Force the configure task to run every time to detect source changes

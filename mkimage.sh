@@ -150,6 +150,26 @@ write_authenticode_hash() {
     fi
 }
 
+ensure_dstack_mr_bin() {
+    DSTACK_SRC="${DSTACK_SRC:-$SCRIPT_DIR/dstack}"
+    if [ -z "${DSTACK_MR_BIN:-}" ]; then
+        for c in "$SCRIPT_DIR/dstack-mr" "$SCRIPT_DIR/rust-target/release/dstack-mr" \
+                 "$DSTACK_SRC/target/release/dstack-mr"; do
+            [ -x "$c" ] && DSTACK_MR_BIN="$c" && break
+        done
+    fi
+    if [ -n "${DSTACK_MR_BIN:-}" ] && \
+       ! "$DSTACK_MR_BIN" --help 2>&1 | grep -q "compact-cbor-measurement-v2"; then
+        echo "Existing dstack-mr lacks compact CBOR measurement v2 support; rebuilding"
+        DSTACK_MR_BIN=""
+    fi
+    if [ -z "${DSTACK_MR_BIN:-}" ]; then
+        echo "Building dstack-mr to compute image measurement material"
+        ( cd "$DSTACK_SRC" && cargo build --release -p dstack-mr )
+        DSTACK_MR_BIN="$DSTACK_SRC/target/release/dstack-mr"
+    fi
+}
+
 create_partitioned_rootfs() {
     local rootfs_img="$1"
     local output_img="$2"
@@ -253,9 +273,10 @@ $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 
 # AMD SEV firmware (additive). Shipped alongside the TDX firmware so a SEV-SNP
 # launch can select it via the metadata.json "bios-sev" field below. The SEV
-# firmware blob itself is NOT added to sha256sum.txt, but metadata.json (which
-# references it) is, so digest.txt does reflect its presence. That does not
-# change any TDX hardware measurement (MRTD comes from ovmf.fd, RTMRs from
+# firmware blob itself is NOT added to sha256sum.txt, but metadata.json
+# references it and measurement.snp.cbor commits to the SNP launch inputs derived
+# from it, so digest.txt reflects its presence/content. That does not change any
+# TDX hardware measurement (MRTD comes from ovmf.fd, RTMRs from
 # kernel/cmdline/rootfs) -- it only changes dstack's image-bundle digest.
 OVMF_SEV_FIRMWARE=${COMMON_IMG_DIR}/ovmf-sev.fd
 HAVE_OVMF_SEV=0
@@ -308,36 +329,21 @@ cat <<EOF > ${OUTPUT_DIR}/metadata.json
 }
 EOF
 
+ensure_dstack_mr_bin
+
+echo "Generating split measurement CBOR via ${DSTACK_MR_BIN}"
+"${DSTACK_MR_BIN}" tdx-measurement-cbor "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.tdx.cbor"
+MEASUREMENT_FILES="measurement.tdx.cbor"
+if [ "$HAVE_OVMF_SEV" = "1" ]; then
+    "${DSTACK_MR_BIN}" snp-measurement-cbor "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.snp.cbor"
+    MEASUREMENT_FILES="$MEASUREMENT_FILES measurement.snp.cbor"
+fi
+
 echo "Generating image digest to ${OUTPUT_DIR}/"
 pushd ${OUTPUT_DIR}/
-sha256sum ovmf.fd bzImage initramfs.cpio.gz metadata.json > sha256sum.txt
+sha256sum ovmf.fd bzImage initramfs.cpio.gz metadata.json $MEASUREMENT_FILES > sha256sum.txt
 sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
 popd
-
-# digest.sev.txt: the AMD SEV-SNP os_image_hash. Unlike the TDX digest.txt
-# (a content hash that includes the TDX firmware), this is computed by the
-# `dstack-mr` tool from the SEV firmware (ovmf-sev.fd) + kernel/initrd/cmdline/
-# rootfs and matches the os_image_hash the KMS verifier derives from a launch
-# measurement. The VMM reads this file at deploy time instead of recomputing it,
-# so it is required (not best-effort): if `dstack-mr` is not prebuilt, build it.
-HAVE_DIGEST_SEV=0
-if [ "$HAVE_OVMF_SEV" = "1" ]; then
-    DSTACK_SRC="${DSTACK_SRC:-$SCRIPT_DIR/dstack}"
-    if [ -z "${DSTACK_MR_BIN:-}" ]; then
-        for c in "$SCRIPT_DIR/dstack-mr" "$SCRIPT_DIR/rust-target/release/dstack-mr" \
-                 "$DSTACK_SRC/target/release/dstack-mr"; do
-            [ -x "$c" ] && DSTACK_MR_BIN="$c" && break
-        done
-    fi
-    if [ -z "${DSTACK_MR_BIN:-}" ]; then
-        echo "Building dstack-mr to compute digest.sev.txt"
-        ( cd "$DSTACK_SRC" && cargo build --release -p dstack-mr )
-        DSTACK_MR_BIN="$DSTACK_SRC/target/release/dstack-mr"
-    fi
-    echo "Generating digest.sev.txt via ${DSTACK_MR_BIN}"
-    "${DSTACK_MR_BIN}" sev-os-image-hash "${OUTPUT_DIR}" > "${OUTPUT_DIR}/digest.sev.txt"
-    HAVE_DIGEST_SEV=1
-fi
 
 # Create UKI artifacts (disk.raw and auth_hash.txt) in OUTPUT_DIR
 UKI_CREATED=0
@@ -366,12 +372,9 @@ if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     # Bare metal tarball: all files except disk.raw and auth_hash.txt
     rm -rf ${IMAGE_TAR}
     echo "Archiving bare metal image to ${IMAGE_TAR}"
-    BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json"
+    BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json measurement.tdx.cbor"
     if [ "$HAVE_OVMF_SEV" = "1" ]; then
-        BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd"
-    fi
-    if [ "$HAVE_DIGEST_SEV" = "1" ]; then
-        BARE_METAL_FILES="$BARE_METAL_FILES digest.sev.txt"
+        BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd measurement.snp.cbor"
     fi
     (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR} $(for f in $BARE_METAL_FILES; do echo "$TAR_DIR_NAME/$f"; done))
     echo

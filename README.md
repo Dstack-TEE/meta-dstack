@@ -6,6 +6,18 @@ This project implements Yocto layer and the overall build scripts for dstack Bas
 
 See https://github.com/Phala-Network/dstack-cloud for more details.
 
+## End-to-end smoke stack
+
+After building guest images and host binaries, use the e2e helper to bring up a
+complete local dstack stack (KMS, gateway, VMM, and multiple app CVMs):
+
+```bash
+./e2e/run.sh up --image dstack-0.6.0 --apps 3
+```
+
+See [`e2e/README.md`](e2e/README.md) for prerequisites, overrides, log access,
+and teardown commands.
+
 ## Reproducible Build The Guest Image
 
 ### Pre-requisites
