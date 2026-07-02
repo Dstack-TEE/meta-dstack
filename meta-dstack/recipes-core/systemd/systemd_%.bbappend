@@ -1,3 +1,7 @@
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+
+SRC_URI:append = " file://0001-core-suppress-ephemeral-status-output.patch"
+
 do_install:append() {
     # Remove systemd-vconsole-setup entirely (no virtual console needed)
     rm -f ${D}${systemd_system_unitdir}/sysinit.target.wants/systemd-vconsole-setup.service
