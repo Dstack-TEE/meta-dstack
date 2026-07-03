@@ -6,6 +6,12 @@ This project implements Yocto layer and the overall build scripts for dstack Bas
 
 See https://github.com/Phala-Network/dstack-cloud for more details.
 
+## CoCo/Kata Kubernetes smoke test
+
+After building the dstack guest rootfs with CoCo guest components, see
+[`docs/coco-k8s-testing.md`](docs/coco-k8s-testing.md) for a Kata TDX/Kubernetes
+smoke-test workflow.
+
 ## Reproducible Build The Guest Image
 
 ### Pre-requisites
