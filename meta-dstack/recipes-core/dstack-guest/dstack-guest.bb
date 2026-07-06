@@ -3,7 +3,7 @@ DESCRIPTION = "${SUMMARY}"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
-inherit systemd
+inherit systemd pkgconfig
 
 REPO_ROOT = "${THISDIR}/../../.."
 
@@ -13,7 +13,7 @@ S = "${UNPACKDIR}/dstack"
 
 RDEPENDS:${PN} += "bash"
 
-DEPENDS += "rsync-native"
+DEPENDS += "rsync-native tpm2-tss"
 
 # Ensure rsync-native is built before unpack runs
 do_unpack[depends] += "rsync-native:do_populate_sysroot"
