@@ -150,6 +150,21 @@ write_authenticode_hash() {
     fi
 }
 
+ensure_dstack_mr() {
+    DSTACK_SRC="${DSTACK_SRC:-$SCRIPT_DIR/dstack}"
+    if [ -z "${DSTACK_MR_BIN:-}" ]; then
+        for c in "$SCRIPT_DIR/dstack-mr" "$SCRIPT_DIR/rust-target/release/dstack-mr" \
+                 "$DSTACK_SRC/target/release/dstack-mr"; do
+            [ -x "$c" ] && DSTACK_MR_BIN="$c" && break
+        done
+    fi
+    if [ -z "${DSTACK_MR_BIN:-}" ]; then
+        echo "Building dstack-mr to compute OS-image measurement material"
+        ( cd "$DSTACK_SRC" && cargo build --release -p dstack-mr )
+        DSTACK_MR_BIN="$DSTACK_SRC/target/release/dstack-mr"
+    fi
+}
+
 create_partitioned_rootfs() {
     local rootfs_img="$1"
     local output_img="$2"
@@ -308,35 +323,16 @@ cat <<EOF > ${OUTPUT_DIR}/metadata.json
 }
 EOF
 
-echo "Generating image digest to ${OUTPUT_DIR}/"
-pushd ${OUTPUT_DIR}/
-sha256sum ovmf.fd bzImage initramfs.cpio.gz metadata.json > sha256sum.txt
-sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
-popd
+ensure_dstack_mr
 
-# digest.sev.txt: the AMD SEV-SNP os_image_hash. Unlike the TDX digest.txt
-# (a content hash that includes the TDX firmware), this is computed by the
-# `dstack-mr` tool from the SEV firmware (ovmf-sev.fd) + kernel/initrd/cmdline/
-# rootfs and matches the os_image_hash the KMS verifier derives from a launch
-# measurement. The VMM reads this file at deploy time instead of recomputing it,
-# so it is required (not best-effort): if `dstack-mr` is not prebuilt, build it.
-HAVE_DIGEST_SEV=0
+echo "Generating measurement.tdx.cbor via ${DSTACK_MR_BIN}"
+"${DSTACK_MR_BIN}" tdx-measurement-cbor "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.tdx.cbor"
+
+HAVE_MEASUREMENT_SNP=0
 if [ "$HAVE_OVMF_SEV" = "1" ]; then
-    DSTACK_SRC="${DSTACK_SRC:-$SCRIPT_DIR/dstack}"
-    if [ -z "${DSTACK_MR_BIN:-}" ]; then
-        for c in "$SCRIPT_DIR/dstack-mr" "$SCRIPT_DIR/rust-target/release/dstack-mr" \
-                 "$DSTACK_SRC/target/release/dstack-mr"; do
-            [ -x "$c" ] && DSTACK_MR_BIN="$c" && break
-        done
-    fi
-    if [ -z "${DSTACK_MR_BIN:-}" ]; then
-        echo "Building dstack-mr to compute digest.sev.txt"
-        ( cd "$DSTACK_SRC" && cargo build --release -p dstack-mr )
-        DSTACK_MR_BIN="$DSTACK_SRC/target/release/dstack-mr"
-    fi
-    echo "Generating digest.sev.txt via ${DSTACK_MR_BIN}"
-    "${DSTACK_MR_BIN}" sev-os-image-hash "${OUTPUT_DIR}" > "${OUTPUT_DIR}/digest.sev.txt"
-    HAVE_DIGEST_SEV=1
+    echo "Generating measurement.snp.cbor via ${DSTACK_MR_BIN}"
+    "${DSTACK_MR_BIN}" snp-measurement-cbor "${OUTPUT_DIR}" > "${OUTPUT_DIR}/measurement.snp.cbor"
+    HAVE_MEASUREMENT_SNP=1
 fi
 
 # Create UKI artifacts (disk.raw and auth_hash.txt) in OUTPUT_DIR
@@ -359,6 +355,37 @@ if [ "$ENABLE_UKI_IMAGE" = "1" ]; then
     fi
 fi
 
+HAVE_MEASUREMENT_GCP=0
+if [[ "$UKI_CREATED" = "1" ]]; then
+    if [[ ! -f "${OUTPUT_DIR}/auth_hash.txt" ]]; then
+        echo "Error: UKI image was created but auth_hash.txt is missing" >&2
+        exit 1
+    fi
+    echo "Generating measurement.gcp.cbor via ${DSTACK_MR_BIN}"
+    "${DSTACK_MR_BIN}" gcp-measurement-cbor "${OUTPUT_DIR}/auth_hash.txt" > "${OUTPUT_DIR}/measurement.gcp.cbor"
+    HAVE_MEASUREMENT_GCP=1
+fi
+
+echo "Generating unified image digest to ${OUTPUT_DIR}/"
+CHECKSUM_FILES="ovmf.fd bzImage initramfs.cpio.gz metadata.json measurement.tdx.cbor"
+if [ "$HAVE_MEASUREMENT_SNP" = "1" ]; then
+    CHECKSUM_FILES="$CHECKSUM_FILES measurement.snp.cbor"
+fi
+if [ "$HAVE_MEASUREMENT_GCP" = "1" ]; then
+    CHECKSUM_FILES="$CHECKSUM_FILES measurement.gcp.cbor"
+fi
+(
+    cd "${OUTPUT_DIR}/"
+    sha256sum $CHECKSUM_FILES > sha256sum.txt
+    sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
+)
+
+# Keep the legacy file name for AMD deployment tooling, but the content is now
+# the same unified OS image hash used by TDX and GCP.
+if [ "$HAVE_OVMF_SEV" = "1" ]; then
+    cp "${OUTPUT_DIR}/digest.txt" "${OUTPUT_DIR}/digest.sev.txt"
+fi
+
 if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     OUTPUT_DIR=$(realpath ${OUTPUT_DIR})
     PARENT_DIR=$(dirname ${OUTPUT_DIR})
@@ -366,21 +393,27 @@ if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     # Bare metal tarball: all files except disk.raw and auth_hash.txt
     rm -rf ${IMAGE_TAR}
     echo "Archiving bare metal image to ${IMAGE_TAR}"
-    BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json"
+    BARE_METAL_FILES="rootfs.img.parted.verity bzImage ovmf.fd digest.txt sha256sum.txt initramfs.cpio.gz metadata.json measurement.tdx.cbor"
     if [ "$HAVE_OVMF_SEV" = "1" ]; then
         BARE_METAL_FILES="$BARE_METAL_FILES ovmf-sev.fd"
     fi
-    if [ "$HAVE_DIGEST_SEV" = "1" ]; then
+    if [ "$HAVE_MEASUREMENT_SNP" = "1" ]; then
+        BARE_METAL_FILES="$BARE_METAL_FILES measurement.snp.cbor"
+    fi
+    if [ "$HAVE_MEASUREMENT_GCP" = "1" ]; then
+        BARE_METAL_FILES="$BARE_METAL_FILES measurement.gcp.cbor"
+    fi
+    if [ "$HAVE_OVMF_SEV" = "1" ]; then
         BARE_METAL_FILES="$BARE_METAL_FILES digest.sev.txt"
     fi
     (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR} $(for f in $BARE_METAL_FILES; do echo "$TAR_DIR_NAME/$f"; done))
     echo
 
-    # UKI tarball: only disk.raw and auth_hash.txt
+    # UKI tarball: GCP boot disk plus the unified OS-image identity material.
     if [[ "$UKI_CREATED" = "1" ]]; then
         rm -rf ${IMAGE_TAR_UKI}
         echo "Archiving UKI image to ${IMAGE_TAR_UKI}"
-        UKI_FILES="disk.raw auth_hash.txt"
+        UKI_FILES="disk.raw digest.txt sha256sum.txt measurement.gcp.cbor"
         (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR_UKI} $(for f in $UKI_FILES; do echo "$TAR_DIR_NAME/$f"; done))
         echo
     fi
