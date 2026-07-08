@@ -30,9 +30,13 @@ COMPARE_IMAGE_WHITELIST=(
     "digest.txt"
     "initramfs.cpio.gz"
     "metadata.json"
+    "measurement.gcp.cbor"
+    "measurement.snp.cbor"
+    "measurement.tdx.cbor"
     "ovmf.fd"
     "rootfs.img.parted.verity"
     "sha256sum.txt"
+    "auth_hash.txt"
     "gcp/efi-root/EFI/BOOT/BOOTX64.EFI"
 )
 
