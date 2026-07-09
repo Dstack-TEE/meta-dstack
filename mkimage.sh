@@ -268,10 +268,11 @@ $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 
 # AMD SEV firmware (additive). Shipped alongside the TDX firmware so a SEV-SNP
 # launch can select it via the metadata.json "bios-sev" field below. The SEV
-# firmware blob itself is NOT added to sha256sum.txt, but metadata.json (which
-# references it) is, so digest.txt does reflect its presence. That does not
-# change any TDX hardware measurement (MRTD comes from ovmf.fd, RTMRs from
-# kernel/cmdline/rootfs) -- it only changes dstack's image-bundle digest.
+# firmware blob itself is NOT added directly to sha256sum.txt; when present, its
+# OVMF hash/sections are committed by measurement.snp.cbor, and that file is
+# part of digest.txt. This does not change any TDX hardware
+# measurement (MRTD comes from ovmf.fd, RTMRs from kernel/cmdline/rootfs) -- it
+# only changes dstack's image-bundle digest.
 OVMF_SEV_FIRMWARE=${COMMON_IMG_DIR}/ovmf-sev.fd
 HAVE_OVMF_SEV=0
 BIOS_SEV_JSON=""
@@ -380,12 +381,6 @@ fi
     sha256sum sha256sum.txt | awk '{print $1}' > digest.txt
 )
 
-# Keep the legacy file name for AMD deployment tooling, but the content is now
-# the same unified OS image hash used by TDX and GCP.
-if [ "$HAVE_OVMF_SEV" = "1" ]; then
-    cp "${OUTPUT_DIR}/digest.txt" "${OUTPUT_DIR}/digest.sev.txt"
-fi
-
 if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     OUTPUT_DIR=$(realpath ${OUTPUT_DIR})
     PARENT_DIR=$(dirname ${OUTPUT_DIR})
@@ -402,9 +397,6 @@ if [ x$DSTACK_TAR_RELEASE = x1 ]; then
     fi
     if [ "$HAVE_MEASUREMENT_GCP" = "1" ]; then
         BARE_METAL_FILES="$BARE_METAL_FILES measurement.gcp.cbor"
-    fi
-    if [ "$HAVE_OVMF_SEV" = "1" ]; then
-        BARE_METAL_FILES="$BARE_METAL_FILES digest.sev.txt"
     fi
     (cd "$PARENT_DIR" && tar -czvf ${IMAGE_TAR} $(for f in $BARE_METAL_FILES; do echo "$TAR_DIR_NAME/$f"; done))
     echo
