@@ -1,24 +1,17 @@
 # Yocto support for dstack guest OS
 
-This project implements Yocto layer and the overall build scripts for dstack Base OS image.
+> **⚠️ This repository is archived.**
+>
+> Development has moved into the main [dstack](https://github.com/Dstack-TEE/dstack) monorepo.
+> The Yocto layers and guest OS build live under [`os/yocto/`](https://github.com/Dstack-TEE/dstack/tree/master/os/yocto).
+>
+> Merged via: [Dstack-TEE/dstack#770](https://github.com/Dstack-TEE/dstack/pull/770)
 
-## Build
+Please open issues and pull requests against [Dstack-TEE/dstack](https://github.com/Dstack-TEE/dstack).
 
-See https://github.com/Phala-Network/dstack-cloud for more details.
+---
 
-## Reproducible Build The Guest Image
-
-### Pre-requisites
-
-- X86_64 Linux system with Docker installed
-
-### Build commands
-
-```bash
-git clone https://github.com/Dstack-TEE/meta-dstack.git
-cd meta-dstack/repro-build/
-./repro-build.sh
-```
+This project implemented the Yocto layer and overall build scripts for the dstack Base OS image. Historical content remains available in this archive for reference.
 
 ## License
 
