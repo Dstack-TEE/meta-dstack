@@ -6,12 +6,13 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 mkdir -p /proc
 mkdir -p /sys
 mkdir -p /run
-mount -t proc proc /proc
-mount -t sysfs sysfs /sys
-mount -t tmpfs tmpfs /run
+# systemd keeps these mounts as-is, so apply its options here.
+mount -t proc -o nosuid,nodev,noexec proc /proc
+mount -t sysfs -o nosuid,nodev,noexec sysfs /sys
+mount -t tmpfs -o nosuid,nodev,mode=0755 tmpfs /run
 
 mkdir -p /dev
-mount -t devtmpfs devtmpfs /dev
+mount -t devtmpfs -o nosuid,strictatime,mode=0755 devtmpfs /dev
 
 mkdir -p /dev/pts
 
@@ -36,7 +37,7 @@ echo "  Root device: ${ROOT_DEV}"
 echo "  Root hash: ${ROOT_HASH}"
 echo "  Data size: ${DATA_SIZE}"
 
-veritysetup open ${ROOT_DEV} rootfs ${ROOT_DEV} "${ROOT_HASH}" --hash-offset="${DATA_SIZE}"
+veritysetup open ${ROOT_DEV} rootfs ${ROOT_DEV} "${ROOT_HASH}" --hash-offset="${DATA_SIZE}" --panic-on-corruption
 
 echo "Mounting rootfs..."
 mount -t squashfs /dev/mapper/rootfs ${ROOT_DIR}
