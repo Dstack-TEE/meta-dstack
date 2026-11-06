@@ -63,6 +63,13 @@ $Q cp $INITRAMFS_IMAGE ${OUTPUT_DIR}/initramfs.cpio.gz
 $Q cp $KERNEL_IMAGE ${OUTPUT_DIR}/
 $Q cp $OVMF_FIRMWARE ${OUTPUT_DIR}/
 $Q cp $ROOTFS_IMAGE ${OUTPUT_DIR}/rootfs.img.verity
+# QEMU >= 10.2 stopped writing the boot-loader fields of the kernel setup
+# header for confidential guests, so the same image would measure differently
+# per QEMU version. Normalizing here, and again in OVMF (0006 patch of
+# dstack-ovmf) before it measures, makes RTMR[1] the plain Authenticode hash
+# of this file; metadata.json declares kernel_header_normalized accordingly.
+$Q "$(dirname "${BASH_SOURCE[0]}")/scripts/normalize-kernel-header.py" \
+    ${OUTPUT_DIR}/bzImage ${OUTPUT_DIR}/initramfs.cpio.gz
 
 GIT_REVISION=$(git rev-parse HEAD 2>/dev/null || echo "<unknown>")
 
@@ -92,7 +99,8 @@ cat <<EOF > ${OUTPUT_DIR}/metadata.json
     "git_revision": "$GIT_REVISION",
     "shared_ro": true,
     "is_dev": ${IS_DEV},
-    "ovmf_variant": "$OVMF_VARIANT"
+    "ovmf_variant": "$OVMF_VARIANT",
+    "kernel_header_normalized": true
 }
 EOF
 

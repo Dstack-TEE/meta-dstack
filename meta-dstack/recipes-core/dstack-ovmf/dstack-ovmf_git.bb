@@ -25,7 +25,14 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
            file://0003-Debug-prefix-map.patch \
            file://0004-Reproduciable.patch \
            file://0005-Declare-ProcessLibraryConstructorList.patch \
+           file://0006-OvmfPkg-QemuKernelLoaderFsDxe-normalize-setup-header.patch \
            "
+
+# 0006-OvmfPkg-QemuKernelLoaderFsDxe-normalize-setup-header.patch writes the
+# setup-header fields QEMU writes as boot loader, with the values QEMU <= 10.1
+# writes, so RTMR[1] no longer depends on the host's QEMU version. It pairs with
+# scripts/normalize-kernel-header.py, which writes the same values into the
+# shipped bzImage.
 
 # Pinned to edk2-stable202502 (Feb 2025) instead of the latest stable202505.
 # Between these two tags, six commits land in OvmfPkg / MdeModulePkg that
