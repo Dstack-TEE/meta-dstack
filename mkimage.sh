@@ -100,7 +100,8 @@ cat <<EOF > ${OUTPUT_DIR}/metadata.json
     "shared_ro": true,
     "is_dev": ${IS_DEV},
     "ovmf_variant": "$OVMF_VARIANT",
-    "kernel_header_normalized": true
+    "kernel_header_normalized": true,
+    "sealed_env": true
 }
 EOF
 
